@@ -1,0 +1,20 @@
+name: SmashEgg
+version: '2.0'
+main: org.karton.smashegg.SmashEgg
+api-version: '1.16'
+author: karton111
+description: Плагин на шанс установки яйца призыва в спавнер.
+
+commands:
+  smashegg:
+    description: Основная команда плагина.
+    usage: /<command> reload
+    permission: smashegg.use
+
+permissions:
+  smashegg.reload:
+    description: Разрешает перезагружать конфигурацию плагина.
+    default: op
+  smashegg.use:
+    description: Базовое разрешение на использование команд.
+    default: true
