@@ -1,4 +1,4 @@
-# SmashEgg 2.1 — сообщения используют MiniMessage, а не &-коды.
+# SmashEgg 3.0 — сообщения используют MiniMessage, а не &-коды.
 # /smashegg reload применяет конфиг только после полной проверки.
 # При ошибке сохраняются предыдущие рабочие настройки; причина выводится в консоль.
 # Отсутствующие ключи берутся из встроенных значений, старый файл не перезаписывается.
@@ -15,13 +15,17 @@ settings:
     - WITHER
     - WARDEN
 
-# Пустая строка "" отключает звук. Неверное имя отклоняет загрузку конфига.
+# Звук задаётся namespaced-ключом Minecraft: "entity.player.levelup" или "minecraft:entity.player.levelup".
+# Работают и ключи датапаков/других плагинов: "my_pack:custom_sound".
+# Пустая строка "" отключает звук. Неизвестный ключ отклоняет загрузку конфига.
+# Имена из Bukkit 1.x (ENTITY_PLAYER_LEVELUP, ENTITY_VILLAGER_NO, BLOCK_ANVIL_LAND,
+# BLOCK_GLASS_BREAK) принимаются для совместимости с конфигом 2.x, но в консоль пишется предупреждение.
 # Звуки слышит только игрок, использовавший яйцо.
 sounds:
-  success: ENTITY_PLAYER_LEVELUP  # После подтверждённой смены типа моба в спавнере.
-  failure: ENTITY_VILLAGER_NO
-  denied: BLOCK_ANVIL_LAND
-  egg-break: BLOCK_GLASS_BREAK
+  success: entity.player.levelup  # После подтверждённой смены типа моба в спавнере.
+  failure: entity.villager.no
+  denied: block.anvil.land
+  egg-break: block.glass.break
 
 # Пустая строка "" отключает сообщение.
 messages:

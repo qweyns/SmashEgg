@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Paper 1.21.x needs Java 21; newer runtimes must keep working too.
+        java: [21, 25]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Show plugin descriptor
+        run: unzip -p target/SmashEgg-*.jar plugin.yml
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-java-${{ matrix.java }}
+          path: target/surefire-reports/
+          if-no-files-found: warn
+
+      - name: Upload plugin jar
+        if: matrix.java == 21
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmashEgg
+          path: target/SmashEgg-*.jar

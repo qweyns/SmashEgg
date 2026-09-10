@@ -3,13 +3,12 @@ package org.karton.smashegg;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 
 /** Validated, immutable snapshot. Reload replaces it only after every setting is valid. */
@@ -36,40 +35,39 @@ record PluginSettings(boolean breakOnSpawner, int breakChance, int groundChance,
         Object entries = config.get("settings.black-entities");
         if (!(entries instanceof List<?> list)) {
             throw invalid("settings.black-entities", "must be a list of entity names");
-        } else {
-            for (Object entry : list) {
-                if (!(entry instanceof String text)) {
-                    throw invalid("settings.black-entities", "must contain only strings");
-                }
-                String name = EggTypes.normalize(text);
-                if (!name.matches("[A-Z][A-Z0-9_]*")) {
-                    throw invalid("settings.black-entities", "invalid entity name: " + text);
-                }
-                blacklist.add(name);
-                if (Material.getMaterial(name + "_SPAWN_EGG") == null) {
-                    warning.accept("settings.black-entities: " + name
-                            + " has no spawn egg on this server; kept for compatibility with other versions.");
-                }
+        }
+        for (Object entry : list) {
+            if (!(entry instanceof String text)) {
+                throw invalid("settings.black-entities", "must contain only strings");
+            }
+            String name = EggTypes.normalize(text);
+            if (!name.matches("[A-Z][A-Z0-9_]*")) {
+                throw invalid("settings.black-entities", "invalid entity name: " + text);
+            }
+            blacklist.add(name);
+            if (Material.getMaterial(name + "_SPAWN_EGG") == null) {
+                warning.accept("settings.black-entities: " + name
+                        + " has no spawn egg on this server; kept for compatibility with other versions.");
             }
         }
 
         Map<String, Sound> sounds = new HashMap<>();
         for (String key : SOUND_KEYS) {
             String path = "sounds." + key;
-            String value = string(config, path).trim();
-            if (value.isEmpty()) continue; // An empty sound explicitly disables it.
+            String value = string(config, path);
             try {
-                sounds.put(key, Sound.valueOf(value.toUpperCase(Locale.ROOT)));
+                Sounds.parse(value, warning).ifPresent(sound -> sounds.put(key, sound));
             } catch (IllegalArgumentException e) {
-                throw invalid(path, "unknown sound: " + value + " (use an empty string to disable)");
+                throw invalid(path, e.getMessage());
             }
         }
 
         Map<String, Component> messages = new HashMap<>();
         for (String key : MESSAGE_KEYS) {
             String path = "messages." + key;
+            String value = string(config, path);
             try {
-                messages.put(key, ColorUtil.parse(string(config, path)));
+                messages.put(key, ColorUtil.parse(value));
             } catch (IllegalArgumentException e) {
                 throw invalid(path, e.getMessage());
             }

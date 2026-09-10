@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,7 +21,7 @@ class PluginSettingsTest {
         assertEquals(70, settings.groundChance());
         assertFalse(settings.affectCreative());
         assertTrue(settings.blacklist().contains("WARDEN"));
-        assertEquals(Sound.BLOCK_GLASS_BREAK, settings.sounds().get("egg-break"));
+        assertEquals(Key.key("block.glass.break"), settings.sounds().get("egg-break").name());
     }
 
     @ParameterizedTest
@@ -108,11 +108,34 @@ class PluginSettingsTest {
             YamlConfiguration config = TestSupport.config();
             config.set("sounds.failure", "entity_villager_no");
             config.set("settings.black-entities", List.of("pig"));
-            PluginSettings settings = PluginSettings.load(config, ignored -> {});
-            assertEquals(Sound.ENTITY_VILLAGER_NO, settings.sounds().get("failure"));
+            List<String> warnings = new ArrayList<>();
+            PluginSettings settings = PluginSettings.load(config, warnings::add);
+            assertEquals(Key.key("entity.villager.no"), settings.sounds().get("failure").name());
             assertTrue(settings.blacklist().contains("PIG"));
         } finally {
             Locale.setDefault(previous);
         }
+    }
+
+    @Test
+    void acceptsNamespacedAndCustomSoundKeys() {
+        YamlConfiguration config = TestSupport.config();
+        config.set("sounds.success", "entity.player.levelup");
+        config.set("sounds.failure", "minecraft:entity.villager.no");
+        config.set("sounds.denied", "my_pack:custom_sound");
+        PluginSettings settings = PluginSettings.load(config, ignored -> {});
+        assertEquals(Key.key("entity.player.levelup"), settings.sounds().get("success").name());
+        assertEquals(Key.key("minecraft", "entity.villager.no"), settings.sounds().get("failure").name());
+        assertEquals(Key.key("my_pack", "custom_sound"), settings.sounds().get("denied").name());
+    }
+
+    @Test
+    void keepsLegacyBukkitSoundNamesWorkingWithWarning() {
+        YamlConfiguration config = TestSupport.config();
+        config.set("sounds.egg-break", "BLOCK_GLASS_BREAK");
+        List<String> warnings = new ArrayList<>();
+        PluginSettings settings = PluginSettings.load(config, warnings::add);
+        assertEquals(Key.key("block.glass.break"), settings.sounds().get("egg-break").name());
+        assertTrue(warnings.stream().anyMatch(w -> w.contains("BLOCK_GLASS_BREAK")), warnings::toString);
     }
 }

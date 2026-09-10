@@ -7,9 +7,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -18,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class SmashEgg extends JavaPlugin {
-    private BukkitAudiences adventure;
     private PluginSettings settings;
 
     @Override
@@ -29,21 +27,13 @@ public class SmashEgg extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        adventure = BukkitAudiences.create(this);
+        // Paper implements Adventure's Audience on CommandSender and Player, so no bridge is needed.
         CommandHandler handler = new CommandHandler(this);
         PluginCommand command = Objects.requireNonNull(getCommand("smashegg"), "Missing smashegg command in plugin.yml");
         command.setExecutor(handler);
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(
                 new EggListener(this, () -> ThreadLocalRandom.current().nextInt(100)), this);
-    }
-
-    @Override
-    public void onDisable() {
-        if (adventure != null) {
-            adventure.close();
-            adventure = null;
-        }
     }
 
     boolean reloadSettings() {
@@ -69,12 +59,12 @@ public class SmashEgg extends JavaPlugin {
     void message(CommandSender sender, String key) {
         Component message = settings.messages().get(key);
         if (message != null && !message.equals(Component.empty())) {
-            adventure.sender(sender).sendMessage(message);
+            sender.sendMessage(message);
         }
     }
 
     void sound(Player player, String key) {
         Sound sound = settings.sounds().get(key);
-        if (sound != null) player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+        if (sound != null) player.playSound(sound);
     }
 }
