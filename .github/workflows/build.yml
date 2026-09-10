@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  # The failure report below comments on the pull request.
+  pull-requests: write
 
 jobs:
   build:
@@ -30,7 +32,9 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+        # shell: bash gives -eo pipefail, so a Maven failure is not hidden by tee.
+        shell: bash
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify 2>&1 | tee build.log
 
       - name: Show plugin descriptor
         run: unzip -p target/SmashEgg-*.jar plugin.yml
@@ -42,6 +46,41 @@ jobs:
           name: surefire-reports-java-${{ matrix.java }}
           path: target/surefire-reports/
           if-no-files-found: warn
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-java-${{ matrix.java }}
+          path: build.log
+          if-no-files-found: warn
+
+      - name: Report the failure in the pull request
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "### Сборка не прошла — Java ${{ matrix.java }}"
+            echo
+            echo '```'
+            grep -E '^\[ERROR\]|Tests run:|BUILD FAILURE|BUILD SUCCESS' build.log | head -n 60
+            echo '```'
+            if compgen -G 'target/surefire-reports/*.txt' > /dev/null; then
+              echo
+              echo '#### Провалившиеся тесты'
+              echo
+              echo '```'
+              grep -H -E 'Tests run:.*(Failures: [1-9]|Errors: [1-9])|<<< (FAILURE|ERROR)!' \
+                target/surefire-reports/*.txt | head -n 40
+              echo '```'
+            else
+              echo
+              echo 'Отчётов surefire нет: сборка остановилась до запуска тестов.'
+            fi
+          } > summary.md
+          gh pr comment "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" --body-file summary.md
 
       - name: Upload plugin jar
         if: matrix.java == 21
