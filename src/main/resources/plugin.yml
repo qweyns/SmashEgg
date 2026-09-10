@@ -1,20 +1,22 @@
 name: SmashEgg
-version: '2.0'
+version: '${project.version}'
 main: org.karton.smashegg.SmashEgg
 api-version: '1.16'
-author: karton111
-description: Плагин на шанс установки яйца призыва в спавнер.
+author: qweyns
+description: Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.
 
 commands:
   smashegg:
-    description: Основная команда плагина.
+    description: Управление SmashEgg.
     usage: /<command> reload
-    permission: smashegg.use
 
 permissions:
-  smashegg.reload:
-    description: Разрешает перезагружать конфигурацию плагина.
-    default: op
   smashegg.use:
-    description: Базовое разрешение на использование команд.
+    description: Доступ к команде и использованию яиц на блоках по правилам SmashEgg.
     default: true
+  smashegg.reload:
+    description: Разрешает перезагружать конфигурацию (также требуется smashegg.use).
+    default: op
+  smashegg.bypass:
+    description: Отключает случайную поломку, но не чёрный список и не проверку smashegg.use.
+    default: false

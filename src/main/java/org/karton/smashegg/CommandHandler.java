@@ -1,15 +1,13 @@
 package org.karton.smashegg;
 
-import java.util.ArrayList;
 import java.util.List;
-import net.kyori.adventure.audience.Audience;
+import java.util.Locale;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.configuration.file.FileConfiguration;
 
-public class CommandHandler implements CommandExecutor, TabCompleter {
+public final class CommandHandler implements CommandExecutor, TabCompleter {
     private final SmashEgg plugin;
 
     public CommandHandler(SmashEgg plugin) {
@@ -18,29 +16,24 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Audience audience = this.plugin.adventure().sender(sender);
-        FileConfiguration config = this.plugin.getConfig();
-
-        if (args.length == 0 || !args[0].equalsIgnoreCase("reload")) {
-            ColorUtil.sendMessage(audience, config.getString("messages.usage", "<red>Использование: /smashegg reload"));
-            return true;
-        }
-        
-        if (sender.hasPermission("smashegg.reload")) {
-            this.plugin.reloadConfig();
-            ColorUtil.sendMessage(audience, this.plugin.getConfig().getString("messages.reload-success", "<green>Конфигурация успешно перезагружена!"));
+        if (!sender.hasPermission("smashegg.use")) {
+            plugin.message(sender, "no-permission");
+        } else if (args.length != 1 || !args[0].equalsIgnoreCase("reload")) {
+            plugin.message(sender, "usage");
+        } else if (!sender.hasPermission("smashegg.reload")) {
+            plugin.message(sender, "no-permission");
         } else {
-            ColorUtil.sendMessage(audience, config.getString("messages.no-permission", "<red>У вас нет прав для этого."));
+            plugin.message(sender, plugin.reloadSettings() ? "reload-success" : "reload-failure");
         }
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-        List<String> completions = new ArrayList<>();
-        if (args.length == 1 && "reload".startsWith(args[0].toLowerCase())) {
-            completions.add("reload");
+        if (sender.hasPermission("smashegg.use") && sender.hasPermission("smashegg.reload")
+                && args.length == 1 && "reload".startsWith(args[0].toLowerCase(Locale.ROOT))) {
+            return List.of("reload");
         }
-        return completions;
+        return List.of();
     }
 }

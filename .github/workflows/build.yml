@@ -1,0 +1,51 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '21']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - name: Test and package
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+      - name: Check plugin packaging
+        shell: bash
+        run: |
+          JAR=target/SmashEgg-2.1.0.jar
+          unzip -p "$JAR" plugin.yml | grep -F "version: '2.1.0'"
+          unzip -l "$JAR" > target/jar-contents.txt
+          grep -F 'org/karton/smashegg/libs/kyori/' target/jar-contents.txt
+          if grep -E ' (org/bukkit/|net/kyori/|org/junit/|org/mockito/)' target/jar-contents.txt; then
+            echo 'Unrelocated or provided/test dependencies found in plugin JAR'
+            exit 1
+          fi
+      - name: Upload plugin
+        if: matrix.java == '21'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmashEgg
+          path: target/SmashEgg-2.1.0.jar
+          if-no-files-found: error
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-java-${{ matrix.java }}
+          path: target/surefire-reports/
+          if-no-files-found: ignore
