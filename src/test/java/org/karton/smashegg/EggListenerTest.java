@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,6 +45,8 @@ class EggListenerTest {
     private YamlConfiguration config;
     private Stats stats;
     private final List<Runnable> scheduled = new ArrayList<>();
+    /** Material#isInteractable needs a server, so the tests supply their own classification. */
+    private static final Predicate<Material> INTERACTABLE = material -> material == Material.CHEST;
 
     @BeforeEach
     void setup() {
@@ -82,7 +85,7 @@ class EggListenerTest {
         }).when(scheduler).runTaskLater(eq(plugin), any(Runnable.class), anyLong());
         config = TestSupport.config();
         applyConfig();
-        listener = new EggListener(plugin, roll);
+        listener = new EggListener(plugin, roll, INTERACTABLE);
     }
 
     private void applyConfig() {

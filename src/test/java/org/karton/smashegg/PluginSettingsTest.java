@@ -162,6 +162,16 @@ class PluginSettingsTest {
     }
 
     @Test
+    void overridingOnlyTheOutputKeepsTheTranslatedText() {
+        YamlConfiguration config = TestSupport.config();
+        config.set("messages.denied.output", "actionbar");
+        MessageSpec denied = load(config).messages().get("denied");
+        assertEquals(MessageOutput.ACTIONBAR, denied.output());
+        assertEquals(TestSupport.lang().getString("messages.denied"), denied.text());
+        assertTrue(denied.enabled());
+    }
+
+    @Test
     void configMessagesWinOverTheLanguageFile() {
         YamlConfiguration config = TestSupport.config();
         config.set("messages.denied", "<red>свой текст");

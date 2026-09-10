@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -23,11 +24,21 @@ import org.bukkit.inventory.PlayerInventory;
 final class EggListener implements Listener {
     private final SmashEgg plugin;
     private final IntSupplier roll;
+    private final Predicate<Material> interactable;
     private final Set<UUID> coolingDown = new HashSet<>();
 
     EggListener(SmashEgg plugin, IntSupplier roll) {
+        this(plugin, roll, Material::isInteractable);
+    }
+
+    /**
+     * @param interactable seam for tests: {@code Material#isInteractable()} resolves block data
+     *                     through {@code Registry.BLOCK} and needs a running server
+     */
+    EggListener(SmashEgg plugin, IntSupplier roll, Predicate<Material> interactable) {
         this.plugin = plugin;
         this.roll = roll;
+        this.interactable = interactable;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -55,7 +66,7 @@ final class EggListener implements Listener {
 
         boolean spawner = block.getType() == Material.SPAWNER;
         // Be conservative: opening a chest/door/etc. is not an attempt to use an egg.
-        if (!spawner && block.getType().isInteractable() && !player.isSneaking()) return;
+        if (!spawner && interactable.test(block.getType()) && !player.isSneaking()) return;
 
         String entity = EggTypes.fromMaterial(item.getType());
         Rules rules = settings.rulesFor(world, entity);

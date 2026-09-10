@@ -233,7 +233,7 @@ record PluginSettings(int configVersion, String language, Rules rules,
                 messages.put(key, MessageSpec.disabled());
                 continue;
             }
-            messages.put(key, Messages.parse(value, path, warning));
+            messages.put(key, Messages.parse(value, translations.get(key), path, warning));
         }
         return messages;
     }
