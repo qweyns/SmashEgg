@@ -37,3 +37,16 @@ messages:
   stats: "<#E43A96>▶ <white>Eggs processed: <#E43A96>{used}\n<#E43A96>▶ <white>Broken on spawner: <#E43A96>{broken} <white>| in hands: <#E43A96>{failed}\n<#E43A96>▶ <white>Denied: <#E43A96>{denied} <white>| successful spawners: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Counters <#E43A96>reset<white>."
   unknown: "<#E43A96>▶ <white>Unknown argument. <white>Usage: <#E43A96>/smashegg reload|info [world|mob]|stats [reset]"
+  preview:
+    text: "<#E43A96>▶ <white>{mode} <#E43A96>{entity} <white>| chance <#E43A96>{chance}%"
+    output: actionbar
+  cooldown:
+    text: "<#E43A96>▶ <white>Cooldown <#E43A96>{ticks} <white>tick(s)."
+    output: actionbar
+  critical-fail: "<#E43A96>▶ <white>Critical failure!"
+  consolation: "<#E43A96>▶ <white>Something remains of the egg."
+  announce: "<#E43A96>▶ <white>{player} switched a spawner to <#E43A96>{entity}<white>."
+  all-in: "<#E43A96>▶ <white>All-in accepted."
+  spawner-locked: "<#E43A96>▶ <white>This spawner can no longer be changed."
+  spawner-risk: "<#E43A96>▶ <white>The spawner did not survive the change."
+  catalyst: "<#E43A96>▶ <white>Catalyst applied."

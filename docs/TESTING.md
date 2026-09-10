@@ -6,9 +6,9 @@
 ./mvnw --batch-mode --no-transfer-progress clean verify
 ```
 
-Проверить `target/surefire-reports/` и содержимое `target/SmashEgg-4.0.0.jar`:
+Проверить `target/surefire-reports/` и содержимое `target/SmashEgg-4.1.0.jar`:
 
-- `plugin.yml`: версия `4.0.0`, `main: org.karton.smashegg.SmashEgg`, `api-version: '1.21'`, `folia-supported: false`, шесть прав;
+- `plugin.yml`: версия `4.1.0`, `main: org.karton.smashegg.SmashEgg`, `api-version: '1.21'`, `folia-supported: false`, шесть прав;
 - присутствуют `config.yml`, `lang/ru_RU.yml`, `lang/en_US.yml`;
 - в JAR есть пакеты `org/karton/smashegg/{command,config,effect,listener,text,stats,util}/`;
 - отсутствуют `org/bukkit/`, `net/kyori/`, `org/junit/`, `org/mockito/` — библиотек в JAR быть не должно, их предоставляет Paper.
@@ -34,7 +34,12 @@
 | `particles.<ключ>.offset-y` | Частицы появляются со смещением, а не всегда на +1 по Y |
 | `stats.effects` и `stats.counters` | `/smashegg stats` показывает новые счётчики; эффект пишет в указанный счётчик |
 | `placeholders:` в языковом файле | `{hand}` `{mode}` `{spawner}` `{creative}` `{filter}` и «не задано» в `/info` берутся из языка |
-| `files.lang-directory` / `files.stats-file` | Язык и статистика читаются из указанных относительных путей; `../` отклоняется |
+| `files.lang-directory` / `files.stats-file` / `files.progress-file` | Язык, статистика и progress читаются из указанных относительных путей; `../` отклоняется |
+| Конфиг 4.0 без `gameplay` | Загружается, все новые механики выключены |
+| `gameplay.preview.enabled: true` | Action bar с шансом, пока в руке яйцо и взгляд на блок; выключено — задачи превью нет |
+| `gameplay.all-in` / катализатор / luck / grace / pity | Шанс сдвигается в заявленном порядке; фильтр и `use` не обходятся |
+| `gameplay.change-limit` / `spawner-risk: lock` | Лишний клик даёт `spawner-locked`; lock пишется в PDC спавнера |
+| `sounds.<ключ>.audience: nearby` | Соседи в радиусе слышат звук; `self` — только кликнувший |
 | Неверное имя моба в `settings.entities` | Загрузка успешна, в консоли предупреждение с нормализованным именем |
 | Звук/частицы из датапака (`my_pack:custom_sound`, имя частицы из датапака) | Работают, если существуют на сервере |
 | Некорректный конфиг при запуске | Плагин отключён, причина видна в консоли |

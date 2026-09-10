@@ -82,6 +82,23 @@ class SoundsTest {
     }
 
     @Test
+    void sectionFormCanTargetNearbyPlayers() {
+        SoundCue cue = Sounds.parseCue(
+                Map.of("key", "block.glass.break", "audience", "nearby", "radius", 24),
+                PATH, warnings::add).orElseThrow();
+        assertEquals(SoundAudience.NEARBY, cue.audience());
+        assertEquals(24.0, cue.radius());
+        assertEquals(Key.key("block.glass.break"), cue.name());
+    }
+
+    @Test
+    void plainKeyDefaultsToSelfAudience() {
+        SoundCue cue = Sounds.parseCue("entity.player.levelup", PATH, warnings::add).orElseThrow();
+        assertEquals(SoundAudience.SELF, cue.audience());
+        assertEquals(SoundCue.DEFAULT_RADIUS, cue.radius());
+    }
+
+    @Test
     void rejectsMalformedKeysAndWrongTypes() {
         assertThrows(IllegalArgumentException.class, () -> parse("minecraft:BAD KEY!"));
         assertThrows(IllegalArgumentException.class, () -> parse(42));

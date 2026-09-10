@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import net.kyori.adventure.sound.Sound;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.karton.smashegg.effect.MessageSpec;
@@ -18,6 +17,7 @@ import org.karton.smashegg.effect.Messages;
 import org.karton.smashegg.effect.ParticleDefaults;
 import org.karton.smashegg.effect.ParticleSpec;
 import org.karton.smashegg.effect.Particles;
+import org.karton.smashegg.effect.SoundCue;
 import org.karton.smashegg.effect.SoundDefaults;
 import org.karton.smashegg.effect.Sounds;
 import org.karton.smashegg.stats.Stats.StatsMapping;
@@ -32,25 +32,31 @@ public record PluginSettings(int configVersion, String language, Rules rules,
                       FilterMode filterMode, Set<String> filteredEntities,
                       int cooldownTicks, FailureAction failureAction, boolean logEvents,
                       Set<String> disabledWorlds,
-                      Map<String, Sound> sounds, Map<String, ParticleSpec> particles,
+                      Map<String, SoundCue> sounds, Map<String, ParticleSpec> particles,
                       Map<String, MessageSpec> messages,
                       PlaceholderWords words, SoundDefaults soundDefaults, ParticleDefaults particleDefaults,
-                      StatsMapping stats, String langDirectory, String statsFile) {
+                      StatsMapping stats, String langDirectory, String statsFile, String progressFile,
+                      Gameplay gameplay) {
 
-    public static final int CONFIG_VERSION = 4;
+    public static final int CONFIG_VERSION = 5;
     public static final String DEFAULT_LANGUAGE = "ru_RU";
     public static final String DEFAULT_LANG_DIRECTORY = "lang";
     public static final String DEFAULT_STATS_FILE = "stats.yml";
+    public static final String DEFAULT_PROGRESS_FILE = "progress.yml";
     /** Keys the plugin itself sends; extra keys in config/lang are still loaded. */
-    public static final List<String> EFFECT_KEYS = List.of("success", "ground-failure", "denied", "egg-break");
+    public static final List<String> EFFECT_KEYS = List.of("success", "ground-failure", "denied", "egg-break",
+            "critical-fail", "announce", "preview", "cooldown", "consolation", "all-in",
+            "spawner-locked", "spawner-risk", "catalyst");
     public static final List<String> MESSAGE_KEYS = List.of("usage", "reload-success", "reload-failure",
             "no-permission", "egg-break", "ground-failure", "denied", "success",
-            "info", "stats", "stats-reset", "unknown");
+            "info", "stats", "stats-reset", "unknown",
+            "preview", "cooldown", "critical-fail", "consolation", "announce", "all-in",
+            "spawner-locked", "spawner-risk", "catalyst");
     /** Sound key renamed in 4.0; the old name keeps working. */
     private static final Map<String, String> RENAMED_SOUND_KEYS = Map.of("ground-failure", "failure");
 
     private static final Set<String> TOP_LEVEL_KEYS = Set.of("config-version", "settings", "sounds",
-            "messages", "particles", "defaults", "stats", "files");
+            "messages", "particles", "defaults", "stats", "files", "gameplay");
     private static final Set<String> SETTINGS_KEYS = Set.of("language", "egg-break-on-spawner",
             "egg-break-chance", "ground-spawn-chance", "affect-creative", "cooldown-ticks",
             "failure-action", "log-events", "entity-filter", "black-entities", "allowed-entities",
@@ -59,7 +65,7 @@ public record PluginSettings(int configVersion, String language, Rules rules,
     private static final Set<String> RULE_KEYS = Set.of("egg-break-on-spawner", "egg-break-chance",
             "ground-spawn-chance", "affect-creative");
     private static final Set<String> DEFAULTS_KEYS = Set.of("sounds", "particles");
-    private static final Set<String> FILES_KEYS = Set.of("lang-directory", "stats-file");
+    private static final Set<String> FILES_KEYS = Set.of("lang-directory", "stats-file", "progress-file");
     private static final Set<String> STATS_KEYS = Set.of("used", "counters", "effects");
 
     public PluginSettings {
@@ -128,7 +134,8 @@ public record PluginSettings(int configVersion, String language, Rules rules,
                 particles(config, defaults.particles(), warning),
                 messages(config, lang, warning),
                 words, defaults.sounds(), defaults.particles(), stats,
-                files.langDirectory(), files.statsFile());
+                files.langDirectory(), files.statsFile(), files.progressFile(),
+                Gameplay.load(config.get("gameplay"), "gameplay", warning));
     }
 
     /** Effective rules for a click: global settings, then the world, then the mob. */
@@ -219,7 +226,10 @@ public record PluginSettings(int configVersion, String language, Rules rules,
         String statsFile = section.get("stats-file") == null
                 ? DEFAULT_STATS_FILE
                 : ConfigNodes.relativePath(section.get("stats-file"), "files.stats-file");
-        return new Files(langDirectory, statsFile);
+        String progressFile = section.get("progress-file") == null
+                ? DEFAULT_PROGRESS_FILE
+                : ConfigNodes.relativePath(section.get("progress-file"), "files.progress-file");
+        return new Files(langDirectory, statsFile, progressFile);
     }
 
     private static EffectDefaults defaults(Object node, Consumer<String> warning) {
@@ -269,14 +279,14 @@ public record PluginSettings(int configVersion, String language, Rules rules,
         return name;
     }
 
-    private static Map<String, Sound> sounds(FileConfiguration config, SoundDefaults defaults,
-                                             Consumer<String> warning) {
+    private static Map<String, SoundCue> sounds(FileConfiguration config, SoundDefaults defaults,
+                                                Consumer<String> warning) {
         Map<String, Object> nodes = ConfigNodes.section(config.get("sounds"), "sounds");
         Set<String> keys = new LinkedHashSet<>(EFFECT_KEYS);
         for (String key : nodes.keySet()) {
             if (!RENAMED_SOUND_KEYS.containsValue(key)) keys.add(key);
         }
-        Map<String, Sound> sounds = new HashMap<>();
+        Map<String, SoundCue> sounds = new HashMap<>();
         for (String key : keys) {
             Object value = nodes.get(key);
             if (value == null && RENAMED_SOUND_KEYS.containsKey(key)) {
@@ -287,7 +297,7 @@ public record PluginSettings(int configVersion, String language, Rules rules,
                 }
             }
             if (value == null) continue;
-            Sounds.parse(value, "sounds." + key, defaults, warning).ifPresent(sound -> sounds.put(key, sound));
+            Sounds.parseCue(value, "sounds." + key, defaults, warning).ifPresent(sound -> sounds.put(key, sound));
         }
         return sounds;
     }
@@ -336,7 +346,7 @@ public record PluginSettings(int configVersion, String language, Rules rules,
         return messages;
     }
 
-    private record Files(String langDirectory, String statsFile) {}
+    private record Files(String langDirectory, String statsFile, String progressFile) {}
 
     private record EffectDefaults(SoundDefaults sounds, ParticleDefaults particles) {}
 }

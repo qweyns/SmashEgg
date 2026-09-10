@@ -1,16 +1,17 @@
-# SmashEgg 4.0 — Paper 1.21+.
+# SmashEgg 4.1 — Paper 1.21+.
 # /smashegg reload применяет конфиг только после полной проверки:
 # при ошибке прежние настройки продолжают работать, а причина пишется в консоль.
 # Отсутствующие ключи берутся из встроенных значений, ваш файл не перезаписывается.
 # Неизвестные ключи в settings/defaults/files/stats и неизвестные поля внутри секции
 # звука/частиц/сообщения не отклоняют загрузку, но вызывают предупреждение — так ловятся опечатки.
 # Новые ключи в sounds, particles и messages (и в lang/*.yml) принимаются без предупреждения.
-config-version: 4
+config-version: 5
 
 # Пути относительно plugins/SmashEgg/. В JAR языковые файлы всегда лежат в lang/.
 files:
   lang-directory: lang
   stats-file: stats.yml
+  progress-file: progress.yml
 
 settings:
   # Язык сообщений: файл <files.lang-directory>/<язык>.yml (в jar есть ru_RU и en_US).
@@ -131,6 +132,69 @@ particles:
     count: 8
     spread: 0.25
     speed: 0.01
+
+# Игровые механики сверх броска кубика. По умолчанию всё выключено — поведение как в 4.0.
+# Включайте точечно. Шансы после модификаторов режутся в 0..100.
+# Порядок на клике: правила мира/моба → luck-право → катализатор → all-in → grace/pity → бросок.
+gameplay:
+  preview:
+    enabled: false
+    interval-ticks: 10   # как часто смотреть, куда целится игрок с яйцом
+    reach: 5
+  all-in:
+    enabled: false
+    sneak: true          # присед + достаточно яиц в руке
+    extra: 2             # дополнительные яйца сверх того, что спишет ваниль
+    mode: guarantee      # guarantee — без броска, reduce — сдвинуть шанс на delta
+    break-delta: -100
+    ground-delta: 100
+    pay: success         # success — доплата только если проверка пройдена, always — сразу
+  catalysts: {}
+    # HONEY_BOTTLE:
+    #   consume: true
+    #   break-delta: -15
+    #   ground-delta: 15
+  pity:
+    enabled: false
+    after: 5             # неудач подряд, затем следующий клик проходит
+    scope: player        # player | entity
+  grace:
+    enabled: false
+    first: 10            # первые N проверок шанса у игрока не ломают яйцо
+  luck: []
+    # - permission: smashegg.luck.vip
+    #   break-delta: -10
+    #   ground-delta: 10
+  critical-fail:
+    enabled: false
+    chance: 5            # % от уже случившихся неудач
+    knockback: 0.0
+    potion: ""           # например mining_fatigue; пусто — без эффекта
+    potion-ticks: 60
+    potion-amplifier: 0
+  spawner-risk:
+    enabled: false
+    chance: 0            # % после подтверждённой смены типа
+    action: none         # none | lock | reset
+    reset-to: PIG
+  change-limit:
+    enabled: false
+    max: 3               # сколько раз один спавнер можно переключить
+  consolation:
+    enabled: false
+    material: EGG
+    amount: 1
+    chance: 100
+  cooldown-display:
+    enabled: false       # сообщение cooldown, если пауза > 1 тика
+  announce:
+    enabled: false
+    radius: 32
+    include-self: false
+    entities:
+      - WARDEN
+      - WITHER
+      - ENDER_DRAGON
 
 # Сообщения по умолчанию берутся из lang/<settings.language>.yml. Раскомментируйте ключ,
 # чтобы переопределить его; пустая строка "" отключает сообщение.

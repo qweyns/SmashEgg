@@ -17,7 +17,7 @@ import org.karton.smashegg.config.SectionFields;
  * Keys also allow sounds from datapacks and other plugins, which the old enum never covered.
  */
 public final class Sounds {
-    private static final Set<String> FIELDS = Set.of("key", "volume", "pitch", "source");
+    private static final Set<String> FIELDS = Set.of("key", "volume", "pitch", "source", "audience", "radius");
     /**
      * Bukkit enum names from configs written for SmashEgg 2.x, kept so an upgrade does not need a
      * config edit. Anything else has to be written as a key.
@@ -31,21 +31,30 @@ public final class Sounds {
     private Sounds() {}
 
     public static Optional<Sound> parse(Object value, String path, Consumer<String> warning) {
-        return parse(value, path, SoundDefaults.BUILTIN, warning);
+        return parseCue(value, path, SoundDefaults.BUILTIN, warning).map(SoundCue::sound);
+    }
+
+    public static Optional<Sound> parse(Object value, String path, SoundDefaults defaults, Consumer<String> warning) {
+        return parseCue(value, path, defaults, warning).map(SoundCue::sound);
+    }
+
+    public static Optional<SoundCue> parseCue(Object value, String path, Consumer<String> warning) {
+        return parseCue(value, path, SoundDefaults.BUILTIN, warning);
     }
 
     /**
-     * Accepts either a plain key string or a section with key/volume/pitch/source.
+     * Accepts either a plain key string or a section with key/volume/pitch/source/audience/radius.
      *
      * @param value raw config value; an empty string disables the sound
      * @param path  config path, used in error messages
-     * @return the resolved sound, or empty when the value disables it
-     * @throws IllegalArgumentException if the value is neither a key nor a known legacy name
+     * @return the resolved cue, or empty when the value disables it
      */
-    public static Optional<Sound> parse(Object value, String path, SoundDefaults defaults, Consumer<String> warning) {
+    public static Optional<SoundCue> parseCue(Object value, String path, SoundDefaults defaults,
+                                              Consumer<String> warning) {
         if (value instanceof String text) {
             return key(text, path, warning)
-                    .map(name -> build(name, defaults.volume(), defaults.pitch(), defaults.source()));
+                    .map(name -> new SoundCue(build(name, defaults.volume(), defaults.pitch(), defaults.source()),
+                            SoundAudience.SELF, SoundCue.DEFAULT_RADIUS));
         }
         Map<String, Object> section = ConfigNodes.section(value, path);
         SectionFields.check(section, path, FIELDS, warning);
@@ -56,7 +65,12 @@ public final class Sounds {
         float pitch = (float) ConfigNodes.decimal(section.getOrDefault("pitch", defaults.pitch()),
                 path + ".pitch", 0.0, 2.0);
         Sound.Source source = source(section.getOrDefault("source", defaults.source().name()), path + ".source");
-        return Optional.of(build(name, volume, pitch, source));
+        SoundAudience audience = section.get("audience") == null ? SoundAudience.SELF
+                : SoundAudience.parse(ConfigNodes.string(section.get("audience"), path + ".audience"),
+                path + ".audience");
+        double radius = ConfigNodes.decimal(section.getOrDefault("radius", SoundCue.DEFAULT_RADIUS),
+                path + ".radius", 0.0, 256.0);
+        return Optional.of(new SoundCue(build(name, volume, pitch, source), audience, radius));
     }
 
     private static Sound build(Key name, float volume, float pitch, Sound.Source source) {

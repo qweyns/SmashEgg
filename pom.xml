@@ -6,7 +6,7 @@
 
     <groupId>org.karton</groupId>
     <artifactId>SmashEgg</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
 
     <name>SmashEgg</name>
     <description>Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.</description>

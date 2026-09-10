@@ -45,5 +45,7 @@ class BundledResourcesTest {
         assertEquals(PluginSettings.CONFIG_VERSION, settings.configVersion());
         assertEquals("lang", settings.langDirectory());
         assertEquals("stats.yml", settings.statsFile());
+        assertEquals("progress.yml", settings.progressFile());
+        assertFalse(settings.gameplay().preview().enabled());
     }
 }

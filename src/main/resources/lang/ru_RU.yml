@@ -37,3 +37,16 @@ messages:
   stats: "<#E43A96>▶ <white>Яиц обработано: <#E43A96>{used}\n<#E43A96>▶ <white>Разбито на спавнере: <#E43A96>{broken} <white>| в руках: <#E43A96>{failed}\n<#E43A96>▶ <white>Запрещено: <#E43A96>{denied} <white>| успешных спавнеров: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Счётчики <#E43A96>обнулены<white>."
   unknown: "<#E43A96>▶ <white>Неизвестный аргумент. <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"
+  preview:
+    text: "<#E43A96>▶ <white>{mode} <#E43A96>{entity} <white>| шанс <#E43A96>{chance}%"
+    output: actionbar
+  cooldown:
+    text: "<#E43A96>▶ <white>Пауза <#E43A96>{ticks} <white>тик."
+    output: actionbar
+  critical-fail: "<#E43A96>▶ <white>Критическая неудача!"
+  consolation: "<#E43A96>▶ <white>Что-то осталось от яйца."
+  announce: "<#E43A96>▶ <white>{player} переключил спавнер на <#E43A96>{entity}<white>."
+  all-in: "<#E43A96>▶ <white>Ставка принята."
+  spawner-locked: "<#E43A96>▶ <white>Этот спавнер больше нельзя сменить."
+  spawner-risk: "<#E43A96>▶ <white>Спавнер не выдержал смены типа."
+  catalyst: "<#E43A96>▶ <white>Катализатор сработал."

@@ -5,16 +5,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -23,24 +27,34 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.karton.smashegg.command.CommandHandler;
 import org.karton.smashegg.config.ConfigNodes;
+import org.karton.smashegg.config.Gameplay;
 import org.karton.smashegg.config.PluginSettings;
 import org.karton.smashegg.effect.MessageSpec;
 import org.karton.smashegg.effect.ParticleSpec;
 import org.karton.smashegg.effect.Particles;
+import org.karton.smashegg.effect.SoundAudience;
+import org.karton.smashegg.effect.SoundCue;
+import org.karton.smashegg.gameplay.PreviewTask;
 import org.karton.smashegg.listener.EggListener;
+import org.karton.smashegg.stats.PlayerProgress;
 import org.karton.smashegg.stats.Stats;
 import org.karton.smashegg.text.ColorUtil;
 
 public class SmashEgg extends JavaPlugin {
     private final Stats stats = new Stats();
+    private final PlayerProgress progress = new PlayerProgress();
     /** Particle names already reported as unknown; static like the particle cache it belongs to. */
     private static final Set<String> warnedParticles = ConcurrentHashMap.newKeySet();
     private PluginSettings settings;
     private String version = "unknown";
     private boolean enabled;
+    private PreviewTask previewTask;
+    private int previewTaskId = -1;
+    private int progressTaskId = -1;
 
     @Override
     public void onEnable() {
@@ -59,12 +73,18 @@ public class SmashEgg extends JavaPlugin {
         command.setTabCompleter(handler);
         getServer().getPluginManager().registerEvents(
                 new EggListener(this, () -> ThreadLocalRandom.current().nextInt(100)), this);
+        progress.load(progressFile(), getLogger());
         enabled = true;
+        startBackgroundTasks();
     }
 
     @Override
     public void onDisable() {
-        if (enabled) saveStats();
+        stopBackgroundTasks();
+        if (enabled) {
+            saveStats();
+            saveProgress();
+        }
     }
 
     /**
@@ -93,6 +113,7 @@ public class SmashEgg extends JavaPlugin {
             if (stats != null) stats.apply(loaded.stats());
             Particles.resetCache();
             warnedParticles.clear();
+            if (enabled) startBackgroundTasks();
             return true;
         } catch (IOException | InvalidConfigurationException | IllegalArgumentException e) {
             getLogger().severe("Cannot load config.yml; active settings unchanged: " + e.getMessage());
@@ -172,6 +193,48 @@ public class SmashEgg extends JavaPlugin {
         return stats;
     }
 
+    public PlayerProgress progress() {
+        return progress;
+    }
+
+    public void saveProgress() {
+        if (progress != null) progress.save(progressFile(), getLogger());
+    }
+
+    /**
+     * Builds an item without exposing {@code new ItemStack} to callers that run in unit tests.
+     * Tests stub this seam; production uses the Bukkit constructor.
+     */
+    public ItemStack item(String material, int amount) {
+        Material type = Material.getMaterial(material);
+        if (type == null || amount <= 0) return null;
+        return new ItemStack(type, amount);
+    }
+
+    public Collection<? extends Player> onlinePlayers() {
+        return getServer().getOnlinePlayers();
+    }
+
+    public Collection<? extends Player> nearbyPlayers(Player source, double radius) {
+        Location location = source.getLocation();
+        return location.getNearbyPlayers(radius);
+    }
+
+    public void clearPreview(UUID player) {
+        if (previewTask != null) previewTask.clear(player);
+    }
+
+    public void announce(Player source, Map<String, String> context) {
+        Gameplay.Announce announce = settings.gameplay().announce();
+        if (!announce.enabled()) return;
+        String entity = context.get("entity");
+        if (!announce.entities().isEmpty() && (entity == null || !announce.entities().contains(entity))) return;
+        for (Player other : nearbyPlayers(source, announce.radius())) {
+            if (!announce.includeSelf() && other.equals(source)) continue;
+            message(other, "announce", context);
+        }
+    }
+
     /** Writes stats.yml right away; a manual reset must survive a crash. */
     public void saveStats() {
         stats.save(statsFile(), getLogger());
@@ -193,8 +256,8 @@ public class SmashEgg extends JavaPlugin {
     public void effect(Player player, String key, Map<String, String> context) {
         PluginSettings current = settings;
         send(player, current.messages().get(key), context);
-        Sound sound = current.sounds().get(key);
-        if (sound != null) player.playSound(sound);
+        SoundCue cue = current.sounds().get(key);
+        if (cue != null) playCue(player, cue);
         ParticleSpec particle = current.particles().get(key);
         if (particle != null) spawnParticles(player, particle);
     }
@@ -245,5 +308,57 @@ public class SmashEgg extends JavaPlugin {
         player.getWorld().spawnParticle(particle,
                 player.getLocation().add(spec.offsetX(), spec.offsetY(), spec.offsetZ()),
                 spec.count(), spec.spread(), spec.spread(), spec.spread(), spec.speed());
+    }
+
+    private void playCue(Player player, SoundCue cue) {
+        Sound sound = cue.sound();
+        if (cue.audience() == SoundAudience.SELF) {
+            player.playSound(sound);
+            return;
+        }
+        Location location = player.getLocation();
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        if (cue.audience() == SoundAudience.WORLD) {
+            for (Player other : player.getWorld().getPlayers()) other.playSound(sound, x, y, z);
+            return;
+        }
+        player.playSound(sound);
+        for (Player other : nearbyPlayers(player, cue.radius())) {
+            if (other != player) other.playSound(sound, x, y, z);
+        }
+    }
+
+    private File progressFile() {
+        String name = settings == null ? PluginSettings.DEFAULT_PROGRESS_FILE : settings.progressFile();
+        return new File(getDataFolder(), name);
+    }
+
+    private void startBackgroundTasks() {
+        stopBackgroundTasks();
+        if (settings == null || getServer() == null) return;
+        Gameplay.Preview preview = settings.gameplay().preview();
+        if (preview.enabled()) {
+            previewTask = new PreviewTask(this);
+            previewTaskId = getServer().getScheduler()
+                    .scheduleSyncRepeatingTask(this, previewTask, preview.intervalTicks(), preview.intervalTicks());
+        }
+        progressTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+            if (progress != null && progress.dirty()) saveProgress();
+        }, 6000L, 6000L);
+    }
+
+    private void stopBackgroundTasks() {
+        if (getServer() == null) return;
+        if (previewTaskId >= 0) {
+            getServer().getScheduler().cancelTask(previewTaskId);
+            previewTaskId = -1;
+            previewTask = null;
+        }
+        if (progressTaskId >= 0) {
+            getServer().getScheduler().cancelTask(progressTaskId);
+            progressTaskId = -1;
+        }
     }
 }

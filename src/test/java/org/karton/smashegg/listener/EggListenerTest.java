@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
@@ -35,6 +36,7 @@ import org.mockito.ArgumentCaptor;
 import org.karton.smashegg.SmashEgg;
 import org.karton.smashegg.TestSupport;
 import org.karton.smashegg.config.PluginSettings;
+import org.karton.smashegg.stats.PlayerProgress;
 import org.karton.smashegg.stats.Stats;
 
 class EggListenerTest {
@@ -60,6 +62,7 @@ class EggListenerTest {
         block = mock(Block.class);
         roll = mock(IntSupplier.class);
         stats = new Stats();
+        when(plugin.progress()).thenReturn(new PlayerProgress());
         when(roll.getAsInt()).thenReturn(99);
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
         when(player.getName()).thenReturn("Tester");
@@ -556,6 +559,145 @@ class EggListenerTest {
         listener.onPlayerUseEgg(event);
         assertTrue(event.isCancelled());
         verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+    }
+
+    @Test
+    void luckDeltaShiftsSpawnerChanceBeforeTheRoll() {
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        when(player.hasPermission("smashegg.luck.vip")).thenReturn(true);
+        config.set("gameplay.luck", List.of(Map.of(
+                "permission", "smashegg.luck.vip",
+                "break-delta", -100,
+                "ground-delta", 0)));
+        applyConfig();
+        when(roll.getAsInt()).thenReturn(29);
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertFalse(event.isCancelled());
+        verify(plugin, never()).effect(eq(player), eq("egg-break"), anyMap());
+    }
+
+    @Test
+    void graceSavesTheFirstChanceChecks() {
+        config.set("gameplay.grace.enabled", true);
+        config.set("gameplay.grace.first", 1);
+        applyConfig();
+        when(roll.getAsInt()).thenReturn(99);
+        PlayerInteractEvent first = event();
+        listener.onPlayerUseEgg(first);
+        assertFalse(first.isCancelled());
+        nextTick();
+        PlayerInteractEvent second = event();
+        listener.onPlayerUseEgg(second);
+        assertTrue(second.isCancelled());
+    }
+
+    @Test
+    void pityGuaranteesAfterConsecutiveFails() {
+        config.set("gameplay.pity.enabled", true);
+        config.set("gameplay.pity.after", 1);
+        applyConfig();
+        listener.onPlayerUseEgg(event());
+        nextTick();
+        when(roll.getAsInt()).thenReturn(99);
+        PlayerInteractEvent saved = event();
+        listener.onPlayerUseEgg(saved);
+        assertFalse(saved.isCancelled());
+    }
+
+    @Test
+    void allInGuaranteeSkipsTheRollWhenThePlayerPaysExtraEggs() {
+        config.set("gameplay.all-in.enabled", true);
+        config.set("gameplay.all-in.sneak", true);
+        config.set("gameplay.all-in.extra", 1);
+        config.set("gameplay.all-in.mode", "guarantee");
+        config.set("gameplay.all-in.pay", "success");
+        applyConfig();
+        when(player.isSneaking()).thenReturn(true);
+        PlayerInteractEvent event = event(EquipmentSlot.HAND, 2);
+        listener.onPlayerUseEgg(event);
+        assertFalse(event.isCancelled());
+        verifyNoInteractions(roll);
+        ArgumentCaptor<ItemStack> stack = ArgumentCaptor.forClass(ItemStack.class);
+        verify(inventory).setItem(eq(EquipmentSlot.HAND), stack.capture());
+        assertEquals(1, stack.getValue().getAmount());
+        verify(plugin).effect(eq(player), eq("all-in"), anyMap());
+    }
+
+    @Test
+    void catalystInTheOtherHandShiftsChanceAndCanBeConsumed() {
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        ItemStack honey = fakeStack(Material.HONEY_BOTTLE, 1);
+        when(inventory.getItem(EquipmentSlot.OFF_HAND)).thenReturn(honey);
+        config.set("gameplay.catalysts.HONEY_BOTTLE.consume", true);
+        config.set("gameplay.catalysts.HONEY_BOTTLE.break-delta", -100);
+        applyConfig();
+        when(roll.getAsInt()).thenReturn(29);
+        PlayerInteractEvent event = event(EquipmentSlot.HAND, 2);
+        listener.onPlayerUseEgg(event);
+        assertFalse(event.isCancelled());
+        verify(inventory).setItem(eq(EquipmentSlot.OFF_HAND), isNull());
+        verify(plugin).effect(eq(player), eq("catalyst"), anyMap());
+    }
+
+    @Test
+    void changeLimitLocksASpawnerWithoutConsuming() {
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        CreatureSpawner spawner = mock(CreatureSpawner.class);
+        when(spawner.getSpawnedType()).thenReturn(EntityType.PIG);
+        org.bukkit.persistence.PersistentDataContainer pdc = mock(org.bukkit.persistence.PersistentDataContainer.class);
+        when(spawner.getPersistentDataContainer()).thenReturn(pdc);
+        when(pdc.get(EggListener.CHANGES, org.bukkit.persistence.PersistentDataType.INTEGER)).thenReturn(3);
+        when(block.getState()).thenReturn(spawner);
+        config.set("gameplay.change-limit.enabled", true);
+        config.set("gameplay.change-limit.max", 3);
+        applyConfig();
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        verify(plugin).effect(eq(player), eq("spawner-locked"), anyMap());
+        verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+        verifyNoInteractions(roll);
+    }
+
+    @Test
+    void filterStillBlocksEvenWhenAllInAndGraceAreOn() {
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        config.set("settings.black-entities", List.of("zombie"));
+        config.set("gameplay.all-in.enabled", true);
+        config.set("gameplay.grace.enabled", true);
+        config.set("gameplay.pity.enabled", true);
+        applyConfig();
+        when(player.isSneaking()).thenReturn(true);
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        verify(plugin).effect(eq(player), eq("denied"), anyMap());
+        verifyNoInteractions(roll);
+        verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+    }
+
+    @Test
+    void consolationDropsThroughTheItemSeam() {
+        config.set("gameplay.consolation.enabled", true);
+        config.set("gameplay.consolation.material", "EGG");
+        config.set("gameplay.consolation.amount", 1);
+        config.set("gameplay.consolation.chance", 100);
+        applyConfig();
+        ItemStack egg = fakeStack(Material.EGG, 1);
+        when(plugin.item("EGG", 1)).thenReturn(egg);
+        listener.onPlayerUseEgg(event());
+        verify(world).dropItem(any(Location.class), eq(egg));
+        verify(plugin).effect(eq(player), eq("consolation"), anyMap());
+    }
+
+    @Test
+    void cooldownDisplaySendsAMessageWhenEnabled() {
+        config.set("settings.cooldown-ticks", 5);
+        config.set("gameplay.cooldown-display.enabled", true);
+        applyConfig();
+        listener.onPlayerUseEgg(event());
+        verify(plugin).message(eq(player), eq("cooldown"), anyMap());
     }
 
     @Test

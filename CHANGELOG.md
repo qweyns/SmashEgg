@@ -2,7 +2,33 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/), проект придерживается [семантического версионирования](https://semver.org/lang/ru/).
 
-## [4.0.0] — невыпущенная
+## [4.1.0] — невыпущенная
+
+### Добавлено
+
+- Опциональные игровые механики в `gameplay:` (по умолчанию выключены, поведение как в 4.0):
+  - **preview** — периодический action bar с шансом блока под прицелом;
+  - **all-in** — присед и дополнительные яйца: `guarantee` или `reduce`, оплата `success`/`always`;
+  - **catalysts** — предмет в другой руке со сдвигом шанса;
+  - **pity** — гарантия после N неудач подряд (`scope: player|entity`, файл `files.progress-file`);
+  - **grace** — первые N проверок шанса у игрока не ломают яйцо;
+  - **luck** — список прав со сдвигом шанса, первое совпадение;
+  - **critical-fail** — отбрасывание и зелье после неудачи (не случайный моб);
+  - **spawner-risk** — `lock` или `reset` после подтверждённой смены типа;
+  - **change-limit** — лимит переключений спавнера через PDC;
+  - **consolation** — предмет при неудаче (через фабрику `SmashEgg.item`);
+  - **cooldown-display** — сообщение о паузе, если она длиннее 1 тика;
+  - **announce** — сообщение соседям о редкой смене спавнера.
+- Звук: `sounds.<ключ>.audience: self | nearby | world` и `radius`.
+- Сообщения `preview`, `cooldown`, `critical-fail`, `consolation`, `announce`, `all-in`, `spawner-locked`, `spawner-risk`, `catalyst`; плейсхолдер `{ticks}`.
+- `config-version: 5`. Старый конфиг без `gameplay` загружается, механики остаются выключенными.
+
+### Совместимость
+
+- Фильтр мобов и `smashegg.use` по-прежнему не обходятся luck/all-in/grace/pity/bypass.
+- Порядок на клике: правила мира/моба → luck → катализатор → all-in → grace/pity → бросок.
+
+## [4.0.0]
 
 ### Добавлено
 
@@ -65,5 +91,6 @@
 
 Исходное состояние плагина: вероятность поломки яиц призыва на спавнерах и на земле, чёрный список мобов для спавнеров, поддержка обеих рук, исключение Creative, право `smashegg.bypass`, MiniMessage-сообщения, безопасный reload. Звуки задавались именами перечисления Bukkit, сборка шла против Spigot API.
 
-[4.0.0]: https://github.com/qweyns/SmashEgg/compare/v3.0.0...HEAD
+[4.1.0]: https://github.com/qweyns/SmashEgg/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/qweyns/SmashEgg/compare/v3.0.0...v4.0.0
 [3.0.0]: https://github.com/qweyns/SmashEgg/releases/tag/v3.0.0

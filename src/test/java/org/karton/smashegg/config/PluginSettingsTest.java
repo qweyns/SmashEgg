@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -17,6 +18,8 @@ import org.karton.smashegg.TestSupport;
 import org.karton.smashegg.effect.MessageOutput;
 import org.karton.smashegg.effect.MessageSpec;
 import org.karton.smashegg.effect.ParticleSpec;
+import org.karton.smashegg.effect.SoundAudience;
+import org.karton.smashegg.effect.SoundCue;
 
 class PluginSettingsTest {
 
@@ -51,6 +54,10 @@ class PluginSettingsTest {
         }
         assertEquals("lang", settings.langDirectory());
         assertEquals("stats.yml", settings.statsFile());
+        assertEquals("progress.yml", settings.progressFile());
+        assertFalse(settings.gameplay().preview().enabled());
+        assertFalse(settings.gameplay().allIn().enabled());
+        assertFalse(settings.gameplay().pity().enabled());
         assertEquals(1.0f, settings.soundDefaults().volume());
         assertEquals(1.0, settings.particleDefaults().offsetY());
         assertEquals("used", settings.stats().used());
@@ -156,11 +163,12 @@ class PluginSettingsTest {
         config.set("sounds.denied.volume", 0.5);
         config.set("sounds.denied.pitch", 1.5);
         config.set("sounds.denied.source", "player");
-        Sound sound = load(config).sounds().get("denied");
+        SoundCue sound = load(config).sounds().get("denied");
         assertEquals(Key.key("entity.enderman.teleport"), sound.name());
         assertEquals(0.5f, sound.volume());
         assertEquals(1.5f, sound.pitch());
         assertEquals(Sound.Source.PLAYER, sound.source());
+        assertEquals(SoundAudience.SELF, sound.audience());
     }
 
     @Test
@@ -299,7 +307,7 @@ class PluginSettingsTest {
         config.set("sounds.success", "entity.player.levelup");
         config.set("particles.success", "crit");
         PluginSettings settings = load(config);
-        Sound success = settings.sounds().get("success");
+        SoundCue success = settings.sounds().get("success");
         assertEquals(0.25f, success.volume());
         assertEquals(0.5f, success.pitch());
         assertEquals(Sound.Source.PLAYER, success.source());
@@ -497,5 +505,47 @@ class PluginSettingsTest {
         assertEquals(true, merged.getBoolean("settings.egg-break-on-spawner"));
         assertEquals("block.glass.break", merged.getString("sounds.egg-break.key"));
         assertEquals(List.of("ENDER_DRAGON", "WITHER", "WARDEN"), merged.getStringList("settings.black-entities"));
+        assertEquals(false, merged.getBoolean("gameplay.preview.enabled"));
+        assertEquals("progress.yml", merged.getString("files.progress-file"));
+    }
+
+    @Test
+    void gameplayStaysOffByDefaultAndLuckPicksTheFirstMatchingPermission() {
+        PluginSettings defaults = TestSupport.settings();
+        assertFalse(defaults.gameplay().preview().enabled());
+        assertFalse(defaults.gameplay().allIn().enabled());
+        assertFalse(defaults.gameplay().pity().enabled());
+        assertFalse(defaults.gameplay().grace().enabled());
+        assertFalse(defaults.gameplay().criticalFail().enabled());
+        assertFalse(defaults.gameplay().spawnerRisk().enabled());
+        assertFalse(defaults.gameplay().changeLimit().enabled());
+        assertFalse(defaults.gameplay().consolation().enabled());
+        assertFalse(defaults.gameplay().announce().enabled());
+        assertTrue(defaults.gameplay().luck().isEmpty());
+
+        YamlConfiguration config = TestSupport.config();
+        config.set("gameplay.luck", List.of(
+                Map.of("permission", "smashegg.luck.vip", "break-delta", -20, "ground-delta", 0),
+                Map.of("permission", "smashegg.luck.mvp", "break-delta", -50, "ground-delta", 0)));
+        Gameplay gameplay = load(config).gameplay();
+        assertEquals(-20, gameplay.luckFor(permission -> permission.equals("smashegg.luck.vip")).breakDelta());
+        assertEquals(-50, gameplay.luckFor(permission -> permission.equals("smashegg.luck.mvp")).breakDelta());
+        assertEquals(0, gameplay.luckFor(permission -> false).breakDelta());
+    }
+
+    @Test
+    void rejectsInvalidGameplayValues() {
+        for (Object[] entry : List.of(
+                new Object[]{"gameplay.all-in.mode", "double-or-nothing"},
+                new Object[]{"gameplay.all-in.extra", -1},
+                new Object[]{"gameplay.pity.scope", "world"},
+                new Object[]{"gameplay.spawner-risk.action", "explode"},
+                new Object[]{"files.progress-file", "../evil.yml"})) {
+            YamlConfiguration config = TestSupport.config();
+            config.set((String) entry[0], entry[1]);
+            IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> load(config),
+                    entry[0].toString());
+            assertTrue(e.getMessage().contains(entry[0].toString()), entry[0] + " -> " + e.getMessage());
+        }
     }
 }
