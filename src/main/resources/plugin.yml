@@ -9,7 +9,7 @@ folia-supported: false
 commands:
   smashegg:
     description: Управление SmashEgg.
-    usage: /<command> reload|info [моб]|stats [reset]
+    usage: /<command> reload|info [мир|моб [моб]]|stats [reset]
     aliases: [segg]
 
 permissions:
@@ -21,7 +21,7 @@ permissions:
     default: op
   smashegg.info:
     description: Показывает эффективные шансы для мира и моба (также требуется smashegg.use).
-    default: true
+    default: op
   smashegg.stats:
     description: Показывает счётчики плагина (также требуется smashegg.use).
     default: op

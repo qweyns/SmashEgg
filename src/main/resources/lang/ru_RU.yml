@@ -10,7 +10,7 @@ messages:
   # {player} {world} {entity} {chance} {hand} {mode}
   success: "<#E43A96>▶ <white>Спавнер переключён на <#E43A96>{entity}<white>."
   no-permission: "<#E43A96>▶ <white>У вас <#E43A96>нет прав <white>для этого."
-  usage: "<#E43A96>▶ <white>Использование: <#E43A96>/smashegg reload|info [моб]|stats [reset]"
+  usage: "<#E43A96>▶ <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"
   reload-success: "<#E43A96>▶ <white>Конфигурация <#E43A96>успешно <white>перезагружена!"
   reload-failure: "<#E43A96>▶ <red>Ошибка конфигурации. <white>Прежние настройки сохранены; подробности в консоли."
   # Вывод /smashegg info: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
@@ -18,4 +18,4 @@ messages:
   # Вывод /smashegg stats: {used} {broken} {failed} {denied} {succeeded}
   stats: "<#E43A96>▶ <white>Яиц обработано: <#E43A96>{used}\n<#E43A96>▶ <white>Разбито на спавнере: <#E43A96>{broken} <white>| в руках: <#E43A96>{failed}\n<#E43A96>▶ <white>Запрещено: <#E43A96>{denied} <white>| успешных спавнеров: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Счётчики <#E43A96>обнулены<white>."
-  unknown: "<#E43A96>▶ <white>Неизвестный аргумент. <white>Использование: <#E43A96>/smashegg reload|info [моб]|stats [reset]"
+  unknown: "<#E43A96>▶ <white>Неизвестный аргумент. <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"

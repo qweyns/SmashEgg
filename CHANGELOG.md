@@ -7,13 +7,13 @@
 ### Добавлено
 
 - **Правила по мирам и мобам.** `settings.worlds.<мир>` и `settings.entities.<моб>` переопределяют `egg-break-on-spawner`, `egg-break-chance`, `ground-spawn-chance` и `affect-creative`. Приоритет: мир + моб → мир → моб → глобальные значения.
-- **Белый список мобов.** `settings.entity-filter: BLACKLIST | WHITELIST` и `settings.allowed-entities` — режим «в спавнеры можно ставить только этих мобов».
+- **Белый список мобов.** `settings.entity-filter: blacklist | whitelist` и `settings.allowed-entities` — режим «в спавнеры можно ставить только этих мобов»; в режиме `whitelist` без `allowed-entities` используется `black-entities`.
 - **Плейсхолдеры в сообщениях** (`Placeholders`): `{player}`, `{world}`, `{entity}`, `{chance}`, `{hand}`, `{mode}`; в `/info` и `/stats` дополнительно `{version}`, `{spawner}`, `{break}`, `{ground}`, `{creative}`, `{filter}`, `{cooldown}`, `{used}`, `{broken}`, `{failed}`, `{denied}`, `{succeeded}`.
 - **Выбор канала вывода сообщения**: `messages.<ключ>.output: chat | actionbar | title | none`.
 - **Настройки звука**: `sounds.<ключ>` теперь принимает секцию с `key`, `volume` (0–10), `pitch` (0–2) и `source` (`master`, `music`, `record`, `weather`, `block`, `hostile`, `neutral`, `player`, `ambient`, `voice`). Строковая форма сохранена.
 - **Частицы**: `particles.<ключ>` с `name`, `count`, `spread`, `speed`. Имя разрешается через реестр частиц сервера, поэтому работают и частицы из датапаков; кэш имён сбрасывается при reload.
 - **Статистика** (`Stats`): счётчики использованных, сломанных, отклонённых яиц, неудач и успешных призывов с разбивкой по эффектам. Хранится в `stats.yml`, пишется при остановке сервера.
-- **Команды** `/smashegg` (краткая справка), `/smashegg info [мир [моб]]`, `/smashegg stats`, `/smashegg stats reset`; алиас `/segg`; автодополнение с учётом прав.
+- **Команды** `/smashegg info [мир|моб [моб]]`, `/smashegg stats`, `/smashegg stats reset`; алиас `/segg`; автодополнение подкоманд по правам и имён миров для `info`.
 - **Права** `smashegg.info`, `smashegg.stats`, `smashegg.stats.reset` (по умолчанию — операторы).
 - **Локализация**: `lang/ru_RU.yml` и `lang/en_US.yml`, выбор через `settings.language`, откат на встроенный русский текст при отсутствии файла или ключа.
 - **Настройка поведения при неудаче**: `settings.failure-action: CONSUME | DROP | NOTHING`.

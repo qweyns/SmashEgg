@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -102,6 +103,27 @@ class PluginSettingsTest {
         PluginSettings blacklist = load(config);
         assertTrue(blacklist.blocksEntity("ZOMBIE"));
         assertFalse(blacklist.blocksEntity("ENDER_DRAGON"));
+    }
+
+    @Test
+    void whitelistPrefersTheAllowedEntitiesKey() {
+        YamlConfiguration config = TestSupport.config();
+        config.set("settings.entity-filter", "whitelist");
+        config.set("settings.allowed-entities", List.of("PIG"));
+        PluginSettings whitelist = load(config);
+        assertFalse(whitelist.blocksEntity("PIG"));
+        assertTrue(whitelist.blocksEntity("ZOMBIE"));
+        assertEquals(Set.of("PIG"), whitelist.filteredEntities());
+    }
+
+    @Test
+    void blacklistIgnoresAllowedEntitiesAndUsesBlackEntities() {
+        YamlConfiguration config = TestSupport.config();
+        config.set("settings.allowed-entities", List.of("PIG"));
+        PluginSettings blacklist = load(config);
+        assertEquals(FilterMode.BLACKLIST, blacklist.filterMode());
+        assertTrue(blacklist.blocksEntity("WARDEN"));
+        assertFalse(blacklist.blocksEntity("PIG"));
     }
 
     @Test

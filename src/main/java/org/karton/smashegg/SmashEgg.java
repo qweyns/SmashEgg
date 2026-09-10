@@ -55,7 +55,7 @@ public class SmashEgg extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (enabled) stats.save(statsFile(), getLogger());
+        if (enabled) saveStats();
     }
 
     /**
@@ -148,6 +148,11 @@ public class SmashEgg extends JavaPlugin {
 
     Stats stats() {
         return stats;
+    }
+
+    /** Writes stats.yml right away; a manual reset must survive a crash. */
+    void saveStats() {
+        stats.save(statsFile(), getLogger());
     }
 
     String version() {

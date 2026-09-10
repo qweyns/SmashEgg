@@ -10,7 +10,7 @@ messages:
   # {player} {world} {entity} {chance} {hand} {mode}
   success: "<#E43A96>▶ <white>Spawner switched to <#E43A96>{entity}<white>."
   no-permission: "<#E43A96>▶ <white>You do <#E43A96>not have permission <white>for this."
-  usage: "<#E43A96>▶ <white>Usage: <#E43A96>/smashegg reload|info [mob]|stats [reset]"
+  usage: "<#E43A96>▶ <white>Usage: <#E43A96>/smashegg reload|info [world|mob]|stats [reset]"
   reload-success: "<#E43A96>▶ <white>Configuration <#E43A96>reloaded <white>successfully!"
   reload-failure: "<#E43A96>▶ <red>Configuration error. <white>Previous settings kept; see the console for details."
   # /smashegg info output: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
@@ -18,4 +18,4 @@ messages:
   # /smashegg stats output: {used} {broken} {failed} {denied} {succeeded}
   stats: "<#E43A96>▶ <white>Eggs processed: <#E43A96>{used}\n<#E43A96>▶ <white>Broken on spawner: <#E43A96>{broken} <white>| in hands: <#E43A96>{failed}\n<#E43A96>▶ <white>Denied: <#E43A96>{denied} <white>| successful spawners: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Counters <#E43A96>reset<white>."
-  unknown: "<#E43A96>▶ <white>Unknown argument. <white>Usage: <#E43A96>/smashegg reload|info [mob]|stats [reset]"
+  unknown: "<#E43A96>▶ <white>Unknown argument. <white>Usage: <#E43A96>/smashegg reload|info [world|mob]|stats [reset]"

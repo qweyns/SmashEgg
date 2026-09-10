@@ -168,11 +168,13 @@ class CommandHandlerTest {
 
         handler.onCommand(sender, null, "smashegg", new String[]{"stats", "reset"});
         verify(plugin).message(sender, "no-permission");
+        verify(plugin, never()).saveStats();
         assertEquals(1, stats.get("used"));
 
         when(sender.hasPermission("smashegg.stats.reset")).thenReturn(true);
         handler.onCommand(sender, null, "smashegg", new String[]{"stats", "RESET"});
         verify(plugin).message(sender, "stats-reset");
+        verify(plugin).saveStats();
         assertEquals(0, stats.get("used"));
         assertEquals(0, stats.get("broken"));
     }

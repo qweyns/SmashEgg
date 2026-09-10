@@ -29,10 +29,16 @@ settings:
   # Фильтр не расходует яйцо и действует даже в Creative и при smashegg.bypass.
   # Регистр не важен. Названия новых мобов сохраняются даже на старом сервере.
   entity-filter: blacklist
+  # Список для blacklist.
   black-entities:
     - ENDER_DRAGON
     - WITHER
     - WARDEN
+  # Список для whitelist: эти мобы разрешены, остальные запрещены.
+  # В режиме whitelist имеет приоритет над black-entities.
+  # allowed-entities:
+  #   - PIG
+  #   - COW
 
   # Миры, где плагин вообще не вмешивается (регистр не важен).
   disabled-worlds: []

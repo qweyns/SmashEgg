@@ -38,7 +38,8 @@ record PluginSettings(int configVersion, String language, Rules rules,
             "messages", "particles");
     private static final Set<String> SETTINGS_KEYS = Set.of("language", "egg-break-on-spawner",
             "egg-break-chance", "ground-spawn-chance", "affect-creative", "cooldown-ticks",
-            "failure-action", "log-events", "entity-filter", "black-entities", "disabled-worlds",
+            "failure-action", "log-events", "entity-filter", "black-entities", "allowed-entities",
+            "disabled-worlds",
             "worlds", "entities");
     private static final Set<String> RULE_KEYS = Set.of("egg-break-on-spawner", "egg-break-chance",
             "ground-spawn-chance", "affect-creative");
@@ -77,8 +78,16 @@ record PluginSettings(int configVersion, String language, Rules rules,
         FilterMode filterMode = FilterMode.parse(
                 ConfigNodes.string(settings.get("entity-filter"), "settings.entity-filter"),
                 "settings.entity-filter");
-        Set<String> filteredEntities = entityList(settings.get("black-entities"), "settings.black-entities",
-                warning);
+        // WHITELIST reads allowed-entities so the config reads naturally; black-entities is the
+        // list for BLACKLIST and keeps working in WHITELIST for older configurations.
+        Object entityListNode = filterMode == FilterMode.WHITELIST
+                ? settings.get("allowed-entities") : null;
+        String entityListPath = "settings.allowed-entities";
+        if (entityListNode == null) {
+            entityListNode = settings.get("black-entities");
+            entityListPath = "settings.black-entities";
+        }
+        Set<String> filteredEntities = entityList(entityListNode, entityListPath, warning);
         Set<String> disabledWorlds = worldList(settings.get("disabled-worlds"), "settings.disabled-worlds");
 
         int cooldownTicks = ConfigNodes.integer(settings.get("cooldown-ticks"), "settings.cooldown-ticks", 0, 72000);

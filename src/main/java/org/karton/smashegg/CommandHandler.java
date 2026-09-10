@@ -97,6 +97,7 @@ public final class CommandHandler implements CommandExecutor, TabCompleter {
                 return;
             }
             plugin.stats().reset();
+            plugin.saveStats();
             plugin.message(sender, "stats-reset");
             return;
         }
