@@ -1,0 +1,21 @@
+# Языковой файл SmashEgg. Значения отсюда используются, если ключ не переопределён в config.yml.
+# Формат — MiniMessage. Доступные плейсхолдеры указаны в комментарии над ключом.
+messages:
+  # {player} {world} {entity} {chance} {hand} {mode}
+  egg-break: "<#E43A96>▶ <white>Яйцо <#E43A96>разбилось <white>при установке в спавнер!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  ground-failure: "<#E43A96>▶ <white>Яйцо <#E43A96>разбилось в руках<white>, моб не появился!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  denied: "<#E43A96>▶ <white>Этот тип моба <#E43A96>запрещён <white>в спавнерах!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  success: "<#E43A96>▶ <white>Спавнер переключён на <#E43A96>{entity}<white>."
+  no-permission: "<#E43A96>▶ <white>У вас <#E43A96>нет прав <white>для этого."
+  usage: "<#E43A96>▶ <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"
+  reload-success: "<#E43A96>▶ <white>Конфигурация <#E43A96>успешно <white>перезагружена!"
+  reload-failure: "<#E43A96>▶ <red>Ошибка конфигурации. <white>Прежние настройки сохранены; подробности в консоли."
+  # Вывод /smashegg info: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
+  info: "<#E43A96>▶ <white>SmashEgg <#E43A96>{version} <white>| мир <#E43A96>{world} <white>| моб <#E43A96>{entity}\n<#E43A96>▶ <white>спавнер: <#E43A96>{spawner} <white>({break}%) | блок: <#E43A96>{ground}% <white>| creative: <#E43A96>{creative} <white>| фильтр: <#E43A96>{filter} <white>| пауза: <#E43A96>{cooldown}"
+  # Вывод /smashegg stats: {used} {broken} {failed} {denied} {succeeded}
+  stats: "<#E43A96>▶ <white>Яиц обработано: <#E43A96>{used}\n<#E43A96>▶ <white>Разбито на спавнере: <#E43A96>{broken} <white>| в руках: <#E43A96>{failed}\n<#E43A96>▶ <white>Запрещено: <#E43A96>{denied} <white>| успешных спавнеров: <#E43A96>{succeeded}"
+  stats-reset: "<#E43A96>▶ <white>Счётчики <#E43A96>обнулены<white>."
+  unknown: "<#E43A96>▶ <white>Неизвестный аргумент. <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"

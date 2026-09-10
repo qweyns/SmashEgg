@@ -1,0 +1,106 @@
+# SmashEgg 4.0 — Paper 1.21+.
+# /smashegg reload применяет конфиг только после полной проверки:
+# при ошибке прежние настройки продолжают работать, а причина пишется в консоль.
+# Отсутствующие ключи берутся из встроенных значений, ваш файл не перезаписывается.
+# Неизвестные ключи не отклоняют загрузку, но вызывают предупреждение — так ловятся опечатки.
+config-version: 3
+
+settings:
+  # Язык сообщений: файл lang/<язык>.yml (в jar есть ru_RU и en_US, свой можно положить в plugins/SmashEgg/lang/).
+  # Переопределения из секции messages этого файла имеют приоритет над языковым файлом.
+  language: ru_RU
+
+  egg-break-on-spawner: true
+  egg-break-chance: 30       # 0..100: вероятность поломки на спавнере.
+  ground-spawn-chance: 70    # 0..100: шанс пройти проверку на других блоках.
+  affect-creative: false     # true: Creative тоже теряет яйцо при неудаче.
+
+  # Пауза в тиках после отказа: повторные клики этого игрока игнорируются.
+  # 1 — поведение SmashEgg 2.x/3.x (защита от двойного срабатывания в один тик), 0 — отключить.
+  cooldown-ticks: 1
+
+  # Что делать с яйцом при неудаче: consume — списать, keep — оставить, drop — списать и выбросить предмет.
+  failure-action: consume
+
+  # Писать в консоль сервера каждое срабатывание (полезно для отладки и аудита).
+  log-events: false
+
+  # Мобы в спавнерах. blacklist — список запрещает, whitelist — список разрешает, остальные запрещены.
+  # Фильтр не расходует яйцо и действует даже в Creative и при smashegg.bypass.
+  # Регистр не важен. Названия новых мобов сохраняются даже на старом сервере.
+  entity-filter: blacklist
+  # Список для blacklist.
+  black-entities:
+    - ENDER_DRAGON
+    - WITHER
+    - WARDEN
+  # Список для whitelist: эти мобы разрешены, остальные запрещены.
+  # В режиме whitelist имеет приоритет над black-entities.
+  # allowed-entities:
+  #   - PIG
+  #   - COW
+
+  # Миры, где плагин вообще не вмешивается (регистр не важен).
+  disabled-worlds: []
+
+  # Переопределения по мирам. Приоритет: моб > мир > общие значения.
+  # Доступны те же ключи, что и выше: egg-break-on-spawner, egg-break-chance,
+  # ground-spawn-chance, affect-creative. Указывать нужно только изменяемые.
+  # worlds:
+  #   world_nether:
+  #     ground-spawn-chance: 100
+  #     egg-break-chance: 0
+  #   world_the_end:
+  #     affect-creative: true
+
+  # Переопределения по мобам (имя как в black-entities, регистр не важен).
+  # entities:
+  #   ZOMBIE:
+  #     egg-break-chance: 50
+  #   VILLAGER:
+  #     ground-spawn-chance: 20
+
+# Звук задаётся namespaced-ключом Minecraft: "entity.player.levelup" или "minecraft:entity.player.levelup".
+# Работают и ключи датапаков/других плагинов: "my_pack:custom_sound".
+# Пустая строка "" отключает звук; неизвестный ключ отклоняет загрузку конфига.
+# Вместо строки можно задать секцию с key/volume/pitch/source.
+# source: master, music, record, weather, block, hostile, neutral, player, ambient, voice.
+# Имена из Bukkit 1.x (ENTITY_PLAYER_LEVELUP, ENTITY_VILLAGER_NO, BLOCK_ANVIL_LAND,
+# BLOCK_GLASS_BREAK) принимаются для совместимости со старым конфигом, но дают предупреждение.
+# Ключ ground-failure в 2.x/3.x назывался failure — старое имя продолжает работать.
+sounds:
+  success: entity.player.levelup   # После подтверждённой смены типа моба в спавнере.
+  ground-failure: entity.villager.no
+  denied: block.anvil.land
+  egg-break:
+    key: block.glass.break
+    volume: 1.0
+    pitch: 1.0
+    source: master
+
+# Частицы в точке игрока. name — имя частицы (PARTICLE или particle), count — количество,
+# spread — разброс по осям, speed — скорость/параметр частицы. Пустая строка "" отключает.
+particles:
+  egg-break:
+    name: item_slime
+    count: 12
+    spread: 0.3
+    speed: 0.05
+  ground-failure:
+    name: smoke
+    count: 8
+    spread: 0.25
+    speed: 0.01
+
+# Сообщения по умолчанию берутся из lang/<settings.language>.yml (ключи egg-break, ground-failure,
+# denied, success, no-permission, usage, reload-success, reload-failure, info, stats, stats-reset,
+# unknown). Раскомментируйте ключ, чтобы переопределить его; пустая строка "" отключает сообщение.
+# Кроме текста можно задать канал вывода: chat (по умолчанию), actionbar, title, none.
+# Плейсхолдеры: {player} {world} {entity} {chance} {hand} {mode} — в игровых сообщениях,
+# {version} {spawner} {break} {ground} {creative} {filter} {cooldown} — в info,
+# {used} {broken} {failed} {denied} {succeeded} — в stats.
+# messages:
+#   egg-break: "<red>Яйцо разбилось! Шанс был {chance}%."
+#   denied:
+#     text: "<#E43A96>▶ <white>Этот моб запрещён!"
+#     output: actionbar

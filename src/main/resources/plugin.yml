@@ -1,0 +1,33 @@
+name: SmashEgg
+version: '${project.version}'
+main: org.karton.smashegg.SmashEgg
+api-version: '1.21'
+author: qweyns
+description: Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.
+folia-supported: false
+
+commands:
+  smashegg:
+    description: Управление SmashEgg.
+    usage: /<command> reload|info [мир|моб [моб]]|stats [reset]
+    aliases: [segg]
+
+permissions:
+  smashegg.use:
+    description: Доступ к команде и использованию яиц на блоках по правилам SmashEgg.
+    default: true
+  smashegg.reload:
+    description: Разрешает перезагружать конфигурацию (также требуется smashegg.use).
+    default: op
+  smashegg.info:
+    description: Показывает эффективные шансы для мира и моба (также требуется smashegg.use).
+    default: op
+  smashegg.stats:
+    description: Показывает счётчики плагина (также требуется smashegg.use).
+    default: op
+  smashegg.stats.reset:
+    description: Обнуляет счётчики плагина.
+    default: op
+  smashegg.bypass:
+    description: Отключает случайную поломку, но не фильтр мобов и не проверку smashegg.use.
+    default: false
