@@ -1,4 +1,4 @@
-# SmashEgg 🥚 — 4.0.0
+# SmashEgg 🥚 — 4.1.0
 
 Серверный плагин для **Paper**: настраиваемая вероятность поломки яиц призыва, правила по мирам и мобам, звуки, частицы, сообщения в чат/action bar/титл и статистика использования.
 
@@ -7,11 +7,11 @@
 - Отдельные шансы для спавнеров и обычного использования на блоках.
 - **Правила по мирам и по мобам**: переопределение шансов, включение/выключение поломки на спавнере и Creative для отдельного мира или моба.
 - **Чёрный или белый список** мобов для спавнеров (`entity-filter: BLACKLIST | WHITELIST`); запрещённое яйцо не расходуется.
-- **Плейсхолдеры** в сообщениях: `{player}`, `{world}`, `{entity}`, `{chance}`, `{hand}`, `{mode}`, а в `/info` и `/stats` — `{version}`, `{spawner}`, `{break}`, `{ground}`, `{creative}`, `{filter}`, `{cooldown}`, `{used}`, `{broken}`, `{failed}`, `{denied}`, `{succeeded}`.
+- **Плейсхолдеры** в сообщениях: `{player}`, `{world}`, `{entity}`, `{chance}`, `{hand}`, `{mode}`, а в `/info` и `/stats` — `{version}`, `{spawner}`, `{break}`, `{ground}`, `{creative}`, `{filter}`, `{cooldown}` и счётчики из `stats.counters`. Слова для `{hand}`/`{mode}`/`{spawner}`/`{creative}`/`{filter}` и метка «не задано» задаются в `lang/*.yml` (`placeholders:`).
 - **Куда писать сообщение**: `chat`, `actionbar`, `title` или `none` — на каждое сообщение отдельно.
 - **Звуки** с громкостью, высотой тона и источником (`master`, `music`, `record`, `weather`, `block`, `hostile`, `neutral`, `player`, `ambient`, `voice`).
-- **Частицы** на поломке яйца и неудаче на земле: имя, количество, разброс, скорость.
-- **Статистика** в `stats.yml`: сколько яиц использовано, сломано, отклонено, сколько неудач и удачных призывов, с разбивкой по эффектам; `/smashegg stats` и сброс.
+- **Частицы** на поломке яйца и неудаче на земле: имя, количество, разброс, скорость, смещение `offset-x`/`offset-y`/`offset-z`.
+- **Статистика** в настраиваемом файле (`files.stats-file`, по умолчанию `stats.yml`): счётчики и соответствие «эффект → счётчик» задаются в `stats:`; `/smashegg stats` и сброс. Свои ключи сообщений, звуков и частиц в конфиге и `lang/*.yml` принимаются без предупреждения.
 - **Локализация**: `lang/ru_RU.yml` и `lang/en_US.yml`, переключение через `settings.language`; сообщения можно править без правки `config.yml`.
 - Creative по умолчанию не участвует в случайной поломке; есть отдельное право обхода.
 - Отдельное право обхода случайной поломки, не обходящее фильтр мобов.
@@ -19,6 +19,7 @@
 - Проверка настроек и безопасная перезагрузка: неверный конфиг не заменяет рабочий.
 - Распознавание яиц по материалам работающего сервера, без ручного перечня мобов.
 - Опциональный журнал событий в консоль (`log-events: true`).
+- **Опциональные механики** (`gameplay:`, по умолчанию выключены): превью шанса, all-in, катализатор в другой руке, pity, newbie grace, luck-права, критическая неудача, риск и лимит смены спавнера, утешительный предмет, сообщение о кулдауне, анонс редкой смены, звук для соседей (`audience`).
 
 ## Требования и совместимость
 
@@ -34,7 +35,7 @@
 
 1. Соберите JAR или скачайте артефакт **успешной** сборки GitHub Actions.
 2. Остановите сервер. Удалите прежний JAR SmashEgg из `plugins`, если он есть.
-3. Поместите `SmashEgg-4.0.0.jar` в `plugins` и запустите сервер.
+3. Поместите `SmashEgg-4.1.0.jar` в `plugins` и запустите сервер.
 4. Настройте `plugins/SmashEgg/config.yml`, при желании язык в `plugins/SmashEgg/lang/<код>.yml`, и выполните `/smashegg reload`.
 
 **Старый конфиг удалять не нужно.** Ключи 2.x/3.x сохранены, отсутствующие настройки берутся из встроенных значений без перезаписи файла.
@@ -48,6 +49,15 @@
 | Появились `settings.worlds`, `settings.entities`, `settings.entity-filter`, `settings.log-events`, `settings.cooldown-ticks`, `particles` | Ничего: значения по умолчанию повторяют поведение 3.x |
 | Новые права `smashegg.info`, `smashegg.stats`, `smashegg.stats.reset` | При необходимости выдайте их игрокам |
 | Версия JAR `4.0.0` | Замените файл в `plugins` |
+
+### Переход с 4.0.0
+
+| Что изменилось | Действие |
+|---|---|
+| `config-version: 5`, секция `gameplay` | Ничего: все механики выключены, клик работает как в 4.0 |
+| `files.progress-file` | Ничего: файл создаётся, только если включены pity/grace |
+| `sounds.<ключ>.audience` | Ничего: по умолчанию `self` |
+| Версия JAR `4.1.0` | Замените файл в `plugins` |
 
 ### Переход с 2.x
 
@@ -80,7 +90,7 @@
 
 Автодополнение показывает только те подкоманды, на которые есть право, и имена загруженных миров для `info`. Лишние аргументы отклоняются.
 
-Аргументы `/smashegg info` разбираются так: два аргумента — это всегда мир и моб; один аргумент считается миром, если мир с таким именем загружен, и мобом в противном случае; без аргументов берутся правила мира отправителя. Незаданный мир или моб показывается как `-`.
+Аргументы `/smashegg info` разбираются так: два аргумента — это всегда мир и моб; один аргумент считается миром, если мир с таким именем загружен, и мобом в противном случае; без аргументов берутся правила мира отправителя. Незаданный мир или моб показывается словом из `placeholders.unset` языкового файла (по умолчанию `-`).
 
 ## Как работают правила
 
@@ -124,6 +134,11 @@
 Все настройки — в [config.yml](src/main/resources/config.yml). Краткий пример:
 
 ```yaml
+files:
+  lang-directory: lang
+  stats-file: stats.yml
+  progress-file: progress.yml
+
 settings:
   language: ru_RU
   cooldown-ticks: 1
@@ -131,9 +146,9 @@ settings:
   egg-break-chance: 30
   ground-spawn-chance: 70
   affect-creative: false
-  failure-action: CONSUME
+  failure-action: consume
   log-events: false
-  entity-filter: BLACKLIST
+  entity-filter: blacklist
   black-entities:
     - ENDER_DRAGON
     - WITHER
@@ -143,6 +158,25 @@ settings:
   entities:
     ENDER_DRAGON:
       egg-break-on-spawner: false
+
+defaults:
+  sounds:
+    volume: 1.0
+    pitch: 1.0
+    source: master
+  particles:
+    count: 10
+    spread: 0.3
+    speed: 0.0
+    offset-y: 1.0
+
+stats:
+  used: used
+  effects:
+    egg-break: broken
+    ground-failure: failed
+    denied: denied
+    success: succeeded
 
 sounds:
   egg-break:
@@ -155,11 +189,11 @@ particles:
   egg-break:
     name: item_slime
     count: 12
+    offset-y: 1.0
 
 messages:
   egg-break:
     text: "<red>Яйцо разбилось! <dark gray>(шанс <yellow>{chance}%<dark gray>, рука {hand})"
-    enabled: true
     output: actionbar
 ```
 
@@ -169,11 +203,19 @@ messages:
 
 **Что происходит при неудаче.** `failure-action: consume` (по умолчанию) расходует одно яйцо, `drop` — расходует и выбрасывает его под ноги, `keep` — оставляет яйцо в руке (действие всё равно отменяется). Регистр значения не важен.
 
-**Звуки.** Значение — строка-ключ (`entity.player.levelup`, `minecraft:entity.player.levelup`, `my_pack:custom_sound`) или секция с `key`, `volume` (0–10), `pitch` (0–2) и `source`. Пустая строка `""` отключает звук, неизвестное имя отклоняет загрузку конфига. Имена из Bukkit 1.x (`ENTITY_PLAYER_LEVELUP`, `ENTITY_VILLAGER_NO`, `BLOCK_ANVIL_LAND`, `BLOCK_GLASS_BREAK`) принимаются для совместимости с конфигом 2.x и сопровождаются предупреждением.
+**Звуки.** Значение — строка-ключ (`entity.player.levelup`, `minecraft:entity.player.levelup`, `my_pack:custom_sound`) или секция с `key`, `volume` (0–10), `pitch` (0–2), `source`, `audience` (`self` / `nearby` / `world`) и `radius` (для `nearby`). По умолчанию слышит только кликнувший. Пустая строка `""` отключает звук, неизвестное имя отклоняет загрузку конфига. Имена из Bukkit 1.x (`ENTITY_PLAYER_LEVELUP`, `ENTITY_VILLAGER_NO`, `BLOCK_ANVIL_LAND`, `BLOCK_GLASS_BREAK`) принимаются для совместимости с конфигом 2.x и сопровождаются предупреждением.
 
-**Частицы.** Значение — строка-имя (`item_slime`) или секция с `name`, `count` (1–1000), `spread` (0–8) и `speed` (0–10). Имя ищется через реестр частиц сервера, поэтому частицы из датапаков тоже работают; неизвестное имя отклоняет загрузку конфига.
+**Игровые механики.** Секция `gameplay` выключена по умолчанию. Порядок модификаторов шанса: правила мира/моба → первое совпавшее luck-право → катализатор в другой руке → all-in → grace/pity → бросок 0..99. Фильтр мобов и `smashegg.use` не обходятся. Pity и grace пишутся в `files.progress-file`. Лимит и lock спавнера — PDC-ключи `smashegg:changes` и `smashegg:locked`. Утешительный предмет задаётся именем материала; на сервере его собирает `SmashEgg.item`. Превью-задача стартует только если `gameplay.preview.enabled: true`.
 
-**Сообщения.** Каждое сообщение — секция с `text` (MiniMessage + плейсхолдеры), `enabled` и `output` (`chat`, `actionbar`, `title`, `none`). Строковая форма `messages.success: "<green>..."` по-прежнему принимается.
+**Частицы.** Значение — строка-имя (`item_slime`) или секция с `name`, `count` (1–1000), `spread` (0–8), `speed` (0–10) и `offset-x`/`offset-y`/`offset-z` (−16…16, смещение от ног игрока). Не указанные поля берутся из `defaults.particles`. Имя ищется через реестр частиц сервера, поэтому частицы из датапаков тоже работают; неизвестное имя отклоняет загрузку конфига.
+
+**Сообщения.** Каждое сообщение — секция с `text` (MiniMessage + плейсхолдеры) и `output` (`chat`, `actionbar`, `title`, `none`). Строковая форма `messages.success: "<green>..."` по-прежнему принимается. Свои ключи в `messages:`, `sounds:` и `particles:` (и в `lang/*.yml`) загружаются без предупреждения «unknown config key»; ключи, которые плагин сам отправляет (`no-permission`, `usage`, `denied`, `egg-break`, `ground-failure`, `success`, `info`, `stats`, `stats-reset`, `reload-success`, `reload-failure`, `unknown`, `preview`, `cooldown`, `critical-fail`, `consolation`, `announce`, `all-in`, `spawner-locked`, `spawner-risk`, `catalyst`), заданы в коде.
+
+**Дефолты эффектов.** `defaults.sounds` (`volume`, `pitch`, `source`) и `defaults.particles` (`count`, `spread`, `speed`, `offset-*`) подставляются, когда у конкретного ключа поле не указано или звук/частицы заданы одной строкой.
+
+**Счётчики.** `stats.used` — имя счётчика обработанных яиц; `stats.effects` — карта «ключ эффекта → счётчик»; `stats.counters` — явный список (иначе берутся `used` и значения `effects`). Можно добавить свои счётчики и привязать к ним свои ключи эффектов.
+
+**Файлы.** `files.lang-directory`, `files.stats-file` и `files.progress-file` — относительные пути внутри `plugins/SmashEgg/` (`..` и абсолютные пути отклоняются). В JAR языковые файлы всегда лежат в `lang/`.
 
 | Плейсхолдер | Где работает | Значение |
 |---|---|---|
@@ -181,23 +223,24 @@ messages:
 | `{world}` | игровые сообщения и `/info` | мир игрока; `-`, если отправитель — консоль без аргумента |
 | `{entity}` | игровые сообщения и `/info` | нормализованное имя моба, например `ENDER_DRAGON` |
 | `{chance}` | игровые сообщения | шанс, который проверялся: для спавнера — поломки, иначе — прохождения |
-| `{hand}` | игровые сообщения | `main` или `off` |
-| `{mode}` | игровые сообщения | `spawner` или `ground` |
+| `{hand}` | игровые сообщения | `placeholders.hand.main` / `placeholders.hand.off` языкового файла |
+| `{mode}` | игровые сообщения | `placeholders.mode.spawner` / `placeholders.mode.ground` |
 | `{version}` | `/info` | версия плагина |
-| `{spawner}` | `/info` | `on` или `off` — включена ли поломка на спавнере |
+| `{spawner}` | `/info` | `placeholders.spawner.on` / `placeholders.spawner.off` — включена ли поломка на спавнере |
 | `{break}`, `{ground}` | `/info` | шансы в процентах |
-| `{creative}` | `/info` | `yes` или `no` — учитывается ли Creative |
-| `{filter}` | `/info` | `blacklist` или `whitelist` |
+| `{creative}` | `/info` | `placeholders.creative.yes` / `placeholders.creative.no` — учитывается ли Creative |
+| `{filter}` | `/info` | `placeholders.filter.blacklist` / `placeholders.filter.whitelist` |
 | `{cooldown}` | `/info` | `settings.cooldown-ticks` |
-| `{used}`, `{broken}`, `{failed}`, `{denied}`, `{succeeded}` | `/stats` | счётчики из `stats.yml` |
+| `{ticks}` | `cooldown` | длительность паузы в тиках |
+| счётчики из `stats.counters` | `/stats` | значения из файла статистики (по умолчанию `{used}` `{broken}` `{failed}` `{denied}` `{succeeded}`) |
 
 Неизвестный плейсхолдер остаётся в тексте как есть, поэтому опечатка видна сразу, а не превращается в пустое место. Значения подставляются с экранированием MiniMessage: имя игрока или мира с `<...>` отобразится текстом.
 
 **Мобы.** Названия нечувствительны к регистру; поддерживаются старые имена `MUSHROOM_COW` → `MOOSHROOM` и `SNOWMAN` → `SNOW_GOLEM`.
 
-**Локализация.** Тексты берутся из `plugins/SmashEgg/lang/<settings.language>.yml`; при отсутствии файла или ключа используется встроенный русский текст. Файлы `ru_RU.yml` и `en_US.yml` поставляются с плагином и копируются при первом запуске.
+**Локализация.** Тексты и слова-плейсхолдеры берутся из `plugins/SmashEgg/<files.lang-directory>/<settings.language>.yml`; при отсутствии файла или ключа используется встроенный русский текст. Файлы `ru_RU.yml` и `en_US.yml` поставляются с плагином и копируются в `lang/` при первом запуске.
 
-**Статистика.** Счётчики хранятся в `plugins/SmashEgg/stats.yml` и записываются при остановке сервера и сразу после `/smashegg stats reset`. Файл можно править и удалять вручную — плагин начнёт с нуля.
+**Статистика.** Счётчики хранятся в `plugins/SmashEgg/<files.stats-file>` и записываются при остановке сервера и сразу после `/smashegg stats reset`. Файл можно править и удалять вручную — плагин начнёт с нуля.
 
 ## Сборка и тесты
 
@@ -211,7 +254,7 @@ Maven Wrapper закрепляет Maven 3.9.9; вручную устанавл�
 mvnw.cmd --batch-mode clean verify
 ```
 
-Результат: `target/SmashEgg-4.0.0.jar`. Shade-плагин не используется: серверный API и Adventure предоставляет Paper, в JAR плагина библиотек нет.
+Результат: `target/SmashEgg-4.1.0.jar`. Shade-плагин не используется: серверный API и Adventure предоставляет Paper, в JAR плагина библиотек нет.
 
 JUnit / Mockito тесты покрывают шансы и границы, правила по мирам и мобам и их приоритет, оба режима фильтра, права, Creative, обе руки, расход и выбрасывание яйца, отменённые события, интерактивные блоки, подтверждение смены спавнера, разбор звуков и частиц, плейсхолдеры, MiniMessage-экранирование, статистику и её сохранение, валидацию и атомарность reload. GitHub Actions выполняет `clean verify` на Java 21 и 25 и публикует JAR и отчёты тестов.
 
@@ -219,8 +262,10 @@ Unit-тесты не заменяют запуск Minecraft. Перед уст�
 
 ## Структура
 
-- `SmashEgg` — жизненный цикл, атомарная загрузка настроек и языка, отправка эффектов через Adventure, статистика.
-- `EggListener` — игровые события, инвентарь, эффекты при поломке и неудаче.
+- `SmashEgg` — жизненный цикл, атомарная загрузка настроек и языка, отправка эффектов через Adventure, статистика, превью и progress.yml.
+- `EggListener` — игровые события, инвентарь, эффекты при поломке и неудаче, опциональные механики `gameplay`.
+- `Gameplay` — разбор выключаемых механик; `PreviewTask` — периодический взгляд вперёд.
+- `PlayerProgress` — счётчики pity/grace.
 - `PluginSettings` — неизменяемый проверенный снимок конфигурации, правила по мирам и мобам.
 - `Rules` — базовые правила и их переопределения.
 - `EggTypes` — распознавание материалов яиц и нормализация названий.

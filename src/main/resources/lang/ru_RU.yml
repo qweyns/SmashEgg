@@ -1,5 +1,23 @@
 # Языковой файл SmashEgg. Значения отсюда используются, если ключ не переопределён в config.yml.
 # Формат — MiniMessage. Доступные плейсхолдеры указаны в комментарии над ключом.
+placeholders:
+  hand:
+    main: основная
+    "off": вторая
+  mode:
+    spawner: спавнер
+    ground: земля
+  spawner:
+    "on": вкл
+    "off": выкл
+  creative:
+    "yes": да
+    "no": нет
+  filter:
+    blacklist: чёрный список
+    whitelist: белый список
+  unset: "-"
+
 messages:
   # {player} {world} {entity} {chance} {hand} {mode}
   egg-break: "<#E43A96>▶ <white>Яйцо <#E43A96>разбилось <white>при установке в спавнер!"
@@ -15,7 +33,20 @@ messages:
   reload-failure: "<#E43A96>▶ <red>Ошибка конфигурации. <white>Прежние настройки сохранены; подробности в консоли."
   # Вывод /smashegg info: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
   info: "<#E43A96>▶ <white>SmashEgg <#E43A96>{version} <white>| мир <#E43A96>{world} <white>| моб <#E43A96>{entity}\n<#E43A96>▶ <white>спавнер: <#E43A96>{spawner} <white>({break}%) | блок: <#E43A96>{ground}% <white>| creative: <#E43A96>{creative} <white>| фильтр: <#E43A96>{filter} <white>| пауза: <#E43A96>{cooldown}"
-  # Вывод /smashegg stats: {used} {broken} {failed} {denied} {succeeded}
+  # Вывод /smashegg stats: счётчики из stats.counters (по умолчанию {used} {broken} {failed} {denied} {succeeded})
   stats: "<#E43A96>▶ <white>Яиц обработано: <#E43A96>{used}\n<#E43A96>▶ <white>Разбито на спавнере: <#E43A96>{broken} <white>| в руках: <#E43A96>{failed}\n<#E43A96>▶ <white>Запрещено: <#E43A96>{denied} <white>| успешных спавнеров: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Счётчики <#E43A96>обнулены<white>."
   unknown: "<#E43A96>▶ <white>Неизвестный аргумент. <white>Использование: <#E43A96>/smashegg reload|info [мир|моб]|stats [reset]"
+  preview:
+    text: "<#E43A96>▶ <white>{mode} <#E43A96>{entity} <white>| шанс <#E43A96>{chance}%"
+    output: actionbar
+  cooldown:
+    text: "<#E43A96>▶ <white>Пауза <#E43A96>{ticks} <white>тик."
+    output: actionbar
+  critical-fail: "<#E43A96>▶ <white>Критическая неудача!"
+  consolation: "<#E43A96>▶ <white>Что-то осталось от яйца."
+  announce: "<#E43A96>▶ <white>{player} переключил спавнер на <#E43A96>{entity}<white>."
+  all-in: "<#E43A96>▶ <white>Ставка принята."
+  spawner-locked: "<#E43A96>▶ <white>Этот спавнер больше нельзя сменить."
+  spawner-risk: "<#E43A96>▶ <white>Спавнер не выдержал смены типа."
+  catalyst: "<#E43A96>▶ <white>Катализатор сработал."

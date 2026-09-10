@@ -6,7 +6,7 @@
 
     <groupId>org.karton</groupId>
     <artifactId>SmashEgg</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
 
     <name>SmashEgg</name>
     <description>Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.</description>
@@ -105,7 +105,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.14.0</version>
                 <configuration>
                     <compilerArgs>
                         <arg>-Xlint:all,-processing</arg>

@@ -1,5 +1,23 @@
 # SmashEgg language file. Values here are used unless the key is overridden in config.yml.
 # Format is MiniMessage. Available placeholders are listed in the comment above each key.
+placeholders:
+  hand:
+    main: main
+    "off": "off"
+  mode:
+    spawner: spawner
+    ground: ground
+  spawner:
+    "on": "on"
+    "off": "off"
+  creative:
+    "yes": "yes"
+    "no": "no"
+  filter:
+    blacklist: blacklist
+    whitelist: whitelist
+  unset: "-"
+
 messages:
   # {player} {world} {entity} {chance} {hand} {mode}
   egg-break: "<#E43A96>▶ <white>The egg <#E43A96>broke <white>while setting the spawner!"
@@ -15,7 +33,20 @@ messages:
   reload-failure: "<#E43A96>▶ <red>Configuration error. <white>Previous settings kept; see the console for details."
   # /smashegg info output: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
   info: "<#E43A96>▶ <white>SmashEgg <#E43A96>{version} <white>| world <#E43A96>{world} <white>| mob <#E43A96>{entity}\n<#E43A96>▶ <white>spawner: <#E43A96>{spawner} <white>({break}%) | block: <#E43A96>{ground}% <white>| creative: <#E43A96>{creative} <white>| filter: <#E43A96>{filter} <white>| cooldown: <#E43A96>{cooldown}"
-  # /smashegg stats output: {used} {broken} {failed} {denied} {succeeded}
+  # /smashegg stats output: counters from stats.counters (defaults: {used} {broken} {failed} {denied} {succeeded})
   stats: "<#E43A96>▶ <white>Eggs processed: <#E43A96>{used}\n<#E43A96>▶ <white>Broken on spawner: <#E43A96>{broken} <white>| in hands: <#E43A96>{failed}\n<#E43A96>▶ <white>Denied: <#E43A96>{denied} <white>| successful spawners: <#E43A96>{succeeded}"
   stats-reset: "<#E43A96>▶ <white>Counters <#E43A96>reset<white>."
   unknown: "<#E43A96>▶ <white>Unknown argument. <white>Usage: <#E43A96>/smashegg reload|info [world|mob]|stats [reset]"
+  preview:
+    text: "<#E43A96>▶ <white>{mode} <#E43A96>{entity} <white>| chance <#E43A96>{chance}%"
+    output: actionbar
+  cooldown:
+    text: "<#E43A96>▶ <white>Cooldown <#E43A96>{ticks} <white>tick(s)."
+    output: actionbar
+  critical-fail: "<#E43A96>▶ <white>Critical failure!"
+  consolation: "<#E43A96>▶ <white>Something remains of the egg."
+  announce: "<#E43A96>▶ <white>{player} switched a spawner to <#E43A96>{entity}<white>."
+  all-in: "<#E43A96>▶ <white>All-in accepted."
+  spawner-locked: "<#E43A96>▶ <white>This spawner can no longer be changed."
+  spawner-risk: "<#E43A96>▶ <white>The spawner did not survive the change."
+  catalyst: "<#E43A96>▶ <white>Catalyst applied."
