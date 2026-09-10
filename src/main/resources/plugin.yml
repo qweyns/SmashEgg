@@ -1,0 +1,22 @@
+name: SmashEgg
+version: '${project.version}'
+main: org.karton.smashegg.SmashEgg
+api-version: '1.16'
+author: qweyns
+description: Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.
+
+commands:
+  smashegg:
+    description: Управление SmashEgg.
+    usage: /<command> reload
+
+permissions:
+  smashegg.use:
+    description: Доступ к команде и использованию яиц на блоках по правилам SmashEgg.
+    default: true
+  smashegg.reload:
+    description: Разрешает перезагружать конфигурацию (также требуется smashegg.use).
+    default: op
+  smashegg.bypass:
+    description: Отключает случайную поломку, но не чёрный список и не проверку smashegg.use.
+    default: false
