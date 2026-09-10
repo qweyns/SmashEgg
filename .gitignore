@@ -1,0 +1,25 @@
+# Build output
+target/
+*.class
+*.jar
+!.mvn/wrapper/*.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# Local test server
+run/
+*.log
+crash-reports/
+
+# OS
+.DS_Store
+Thumbs.db
