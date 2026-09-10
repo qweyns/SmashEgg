@@ -6,16 +6,19 @@
 
     <groupId>org.karton</groupId>
     <artifactId>SmashEgg</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
 
     <properties>
         <!-- Paper 1.21.x requires Java 21 or newer. -->
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- Build API. Keep in sync with api-version in plugin.yml. -->
-        <paper.api.version>1.21.11-R0.1-SNAPSHOT</paper.api.version>
-        <!-- Must match the Adventure version bundled by the target Paper build. -->
-        <adventure.version>4.26.1</adventure.version>
+        <!--
+          Build against the OLDEST supported Paper API so the plugin cannot accidentally use
+          methods that newer builds added. Keep in sync with api-version in plugin.yml.
+        -->
+        <paper.api.version>1.21-R0.1-SNAPSHOT</paper.api.version>
+        <!-- Adventure version bundled by Paper 1.21; newer servers ship the same or newer API. -->
+        <adventure.version>4.17.0</adventure.version>
     </properties>
 
     <repositories>

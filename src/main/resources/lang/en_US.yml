@@ -1,0 +1,21 @@
+# SmashEgg language file. Values here are used unless the key is overridden in config.yml.
+# Format is MiniMessage. Available placeholders are listed in the comment above each key.
+messages:
+  # {player} {world} {entity} {chance} {hand} {mode}
+  egg-break: "<#E43A96>▶ <white>The egg <#E43A96>broke <white>while setting the spawner!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  ground-failure: "<#E43A96>▶ <white>The egg <#E43A96>broke in your hands<white>, no mob appeared!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  denied: "<#E43A96>▶ <white>This mob type is <#E43A96>forbidden <white>in spawners!"
+  # {player} {world} {entity} {chance} {hand} {mode}
+  success: "<#E43A96>▶ <white>Spawner switched to <#E43A96>{entity}<white>."
+  no-permission: "<#E43A96>▶ <white>You do <#E43A96>not have permission <white>for this."
+  usage: "<#E43A96>▶ <white>Usage: <#E43A96>/smashegg reload|info [mob]|stats [reset]"
+  reload-success: "<#E43A96>▶ <white>Configuration <#E43A96>reloaded <white>successfully!"
+  reload-failure: "<#E43A96>▶ <red>Configuration error. <white>Previous settings kept; see the console for details."
+  # /smashegg info output: {version} {world} {entity} {spawner} {break} {ground} {creative} {filter} {cooldown}
+  info: "<#E43A96>▶ <white>SmashEgg <#E43A96>{version} <white>| world <#E43A96>{world} <white>| mob <#E43A96>{entity}\n<#E43A96>▶ <white>spawner: <#E43A96>{spawner} <white>({break}%) | block: <#E43A96>{ground}% <white>| creative: <#E43A96>{creative} <white>| filter: <#E43A96>{filter} <white>| cooldown: <#E43A96>{cooldown}"
+  # /smashegg stats output: {used} {broken} {failed} {denied} {succeeded}
+  stats: "<#E43A96>▶ <white>Eggs processed: <#E43A96>{used}\n<#E43A96>▶ <white>Broken on spawner: <#E43A96>{broken} <white>| in hands: <#E43A96>{failed}\n<#E43A96>▶ <white>Denied: <#E43A96>{denied} <white>| successful spawners: <#E43A96>{succeeded}"
+  stats-reset: "<#E43A96>▶ <white>Counters <#E43A96>reset<white>."
+  unknown: "<#E43A96>▶ <white>Unknown argument. <white>Usage: <#E43A96>/smashegg reload|info [mob]|stats [reset]"

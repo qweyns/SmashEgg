@@ -9,17 +9,26 @@ final class TestSupport {
     private TestSupport() {}
 
     static YamlConfiguration config() {
+        return load("/config.yml");
+    }
+
+    static YamlConfiguration lang() {
+        return load("/lang/ru_RU.yml");
+    }
+
+    static PluginSettings settings() {
+        return PluginSettings.load(config(), lang(), ignored -> {});
+    }
+
+    private static YamlConfiguration load(String resource) {
         try (InputStreamReader reader = new InputStreamReader(
-                Objects.requireNonNull(TestSupport.class.getResourceAsStream("/config.yml")), StandardCharsets.UTF_8)) {
+                Objects.requireNonNull(TestSupport.class.getResourceAsStream(resource), resource),
+                StandardCharsets.UTF_8)) {
             YamlConfiguration config = new YamlConfiguration();
             config.load(reader);
             return config;
         } catch (Exception e) {
             throw new AssertionError(e);
         }
-    }
-
-    static PluginSettings settings() {
-        return PluginSettings.load(config(), ignored -> {});
     }
 }

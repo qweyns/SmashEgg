@@ -9,7 +9,8 @@ folia-supported: false
 commands:
   smashegg:
     description: Управление SmashEgg.
-    usage: /<command> reload
+    usage: /<command> reload|info [моб]|stats [reset]
+    aliases: [segg]
 
 permissions:
   smashegg.use:
@@ -18,6 +19,15 @@ permissions:
   smashegg.reload:
     description: Разрешает перезагружать конфигурацию (также требуется smashegg.use).
     default: op
+  smashegg.info:
+    description: Показывает эффективные шансы для мира и моба (также требуется smashegg.use).
+    default: true
+  smashegg.stats:
+    description: Показывает счётчики плагина (также требуется smashegg.use).
+    default: op
+  smashegg.stats.reset:
+    description: Обнуляет счётчики плагина.
+    default: op
   smashegg.bypass:
-    description: Отключает случайную поломку, но не чёрный список и не проверку smashegg.use.
+    description: Отключает случайную поломку, но не фильтр мобов и не проверку smashegg.use.
     default: false

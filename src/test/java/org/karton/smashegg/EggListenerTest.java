@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -36,9 +37,12 @@ class EggListenerTest {
     private Player player;
     private PlayerInventory inventory;
     private Block block;
+    private World world;
+    private BukkitScheduler scheduler;
     private IntSupplier roll;
     private EggListener listener;
     private YamlConfiguration config;
+    private Stats stats;
     private final List<Runnable> scheduled = new ArrayList<>();
 
     @BeforeEach
@@ -48,31 +52,41 @@ class EggListenerTest {
         inventory = mock(PlayerInventory.class);
         block = mock(Block.class);
         roll = mock(IntSupplier.class);
+        stats = new Stats();
         when(roll.getAsInt()).thenReturn(99);
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.getName()).thenReturn("Tester");
         when(player.getGameMode()).thenReturn(GameMode.SURVIVAL);
         when(player.hasPermission("smashegg.use")).thenReturn(true);
         when(player.getInventory()).thenReturn(inventory);
         when(player.isOnline()).thenReturn(true);
+        when(player.getLocation()).thenReturn(mock(Location.class));
         when(block.getType()).thenReturn(Material.STONE);
-        World world = mock(World.class);
-        when(block.getWorld()).thenReturn(world);
+        world = mock(World.class);
+        when(world.getName()).thenReturn("world");
         when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+        when(block.getWorld()).thenReturn(world);
+        when(player.getWorld()).thenReturn(world);
         Server server = mock(Server.class);
-        BukkitScheduler scheduler = mock(BukkitScheduler.class);
+        scheduler = mock(BukkitScheduler.class);
         when(plugin.getServer()).thenReturn(server);
         when(server.getScheduler()).thenReturn(scheduler);
+        when(plugin.stats()).thenReturn(stats);
         doAnswer(call -> {
             scheduled.add(call.getArgument(1, Runnable.class));
             return null;
         }).when(scheduler).runTask(eq(plugin), any(Runnable.class));
+        doAnswer(call -> {
+            scheduled.add(call.getArgument(1, Runnable.class));
+            return null;
+        }).when(scheduler).runTaskLater(eq(plugin), any(Runnable.class), anyLong());
         config = TestSupport.config();
         applyConfig();
         listener = new EggListener(plugin, roll);
     }
 
     private void applyConfig() {
-        when(plugin.settings()).thenReturn(PluginSettings.load(config, ignored -> {}));
+        when(plugin.settings()).thenReturn(PluginSettings.load(config, TestSupport.lang(), ignored -> {}));
     }
 
     private PlayerInteractEvent event(EquipmentSlot hand, int amount) {
@@ -106,8 +120,7 @@ class EggListenerTest {
         verify(inventory).setItem(eq(hand), stack.capture());
         assertEquals(1, stack.getValue().getAmount());
         assertEquals(2, event.getItem().getAmount());
-        verify(plugin).message(player, "ground-failure");
-        verify(plugin).sound(player, "failure");
+        verify(plugin).effect(eq(player), eq("ground-failure"), anyMap());
     }
 
     @Test
@@ -123,7 +136,7 @@ class EggListenerTest {
         listener.onPlayerUseEgg(offhand);
         assertTrue(offhand.isCancelled());
         verify(inventory, never()).setItem(eq(EquipmentSlot.OFF_HAND), any());
-        verify(plugin, times(1)).message(player, "ground-failure");
+        verify(plugin, times(1)).effect(eq(player), eq("ground-failure"), anyMap());
         verify(roll, times(1)).getAsInt();
         nextTick();
         listener.onPlayerUseEgg(event(EquipmentSlot.OFF_HAND, 2));
@@ -139,10 +152,23 @@ class EggListenerTest {
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         assertTrue(event.isCancelled());
-        verify(plugin).message(player, "denied");
-        verify(plugin).sound(player, "denied");
+        verify(plugin).effect(eq(player), eq("denied"), anyMap());
         verifyNoInteractions(roll);
         verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+    }
+
+    @Test
+    void whitelistDeniesEverythingThatIsNotListed() {
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        config.set("settings.entity-filter", "whitelist");
+        config.set("settings.black-entities", List.of("PIG"));
+        applyConfig();
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        verify(plugin).effect(eq(player), eq("denied"), anyMap());
+        verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+        assertEquals(1, stats.get("denied"));
     }
 
     @Test
@@ -155,7 +181,7 @@ class EggListenerTest {
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         assertTrue(event.isCancelled());
-        verify(plugin).message(player, "denied");
+        verify(plugin).effect(eq(player), eq("denied"), anyMap());
         verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
     }
 
@@ -167,7 +193,7 @@ class EggListenerTest {
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         assertFalse(event.isCancelled());
-        verify(plugin, never()).message(player, "denied");
+        verify(plugin, never()).effect(eq(player), eq("denied"), anyMap());
     }
 
     @Test
@@ -177,8 +203,8 @@ class EggListenerTest {
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         assertTrue(event.isCancelled());
-        verify(plugin).message(player, "egg-break");
-        verify(plugin).sound(player, "egg-break");
+        verify(plugin).effect(eq(player), eq("egg-break"), anyMap());
+        assertEquals(1, stats.get("broken"));
     }
 
     @Test
@@ -231,6 +257,113 @@ class EggListenerTest {
     }
 
     @Test
+    void worldOverrideChangesTheChanceForThatWorldOnly() {
+        config.set("settings.worlds.world_nether.ground-spawn-chance", 100);
+        applyConfig();
+        when(roll.getAsInt()).thenReturn(99);
+        PlayerInteractEvent elsewhere = event();
+        listener.onPlayerUseEgg(elsewhere);
+        assertTrue(elsewhere.isCancelled());
+
+        nextTick();
+        when(world.getName()).thenReturn("world_nether");
+        PlayerInteractEvent there = event();
+        listener.onPlayerUseEgg(there);
+        assertFalse(there.isCancelled());
+    }
+
+    @Test
+    void entityOverrideBeatsWorldOverride() {
+        when(world.getName()).thenReturn("world_nether");
+        config.set("settings.worlds.world_nether.ground-spawn-chance", 100);
+        config.set("settings.entities.zombie.ground-spawn-chance", 0);
+        applyConfig();
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        verify(plugin).effect(eq(player), eq("ground-failure"), anyMap());
+    }
+
+    @Test
+    void disabledWorldIsLeftAlone() {
+        config.set("settings.disabled-worlds", List.of("WORLD"));
+        applyConfig();
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertFalse(event.isCancelled());
+        verifyNoInteractions(roll);
+        verify(plugin, never()).effect(any(), any(), any());
+        assertEquals(0, stats.get("used"));
+    }
+
+    @Test
+    void keepActionDoesNotConsumeTheEgg() {
+        config.set("settings.failure-action", "keep");
+        applyConfig();
+        PlayerInteractEvent event = event();
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+        verify(world, never()).dropItem(any(Location.class), any(ItemStack.class));
+    }
+
+    @Test
+    void dropActionConsumesOneEggAndDropsIt() {
+        config.set("settings.failure-action", "drop");
+        applyConfig();
+        PlayerInteractEvent event = event(EquipmentSlot.HAND, 2);
+        listener.onPlayerUseEgg(event);
+        assertTrue(event.isCancelled());
+        ArgumentCaptor<ItemStack> held = ArgumentCaptor.forClass(ItemStack.class);
+        verify(inventory).setItem(eq(EquipmentSlot.HAND), held.capture());
+        assertEquals(1, held.getValue().getAmount());
+        ArgumentCaptor<ItemStack> dropped = ArgumentCaptor.forClass(ItemStack.class);
+        verify(world).dropItem(any(Location.class), dropped.capture());
+        assertEquals(1, dropped.getValue().getAmount());
+    }
+
+    @Test
+    void cooldownIsConfigurableAndBlocksUntilItExpires() {
+        config.set("settings.cooldown-ticks", 5);
+        applyConfig();
+        listener.onPlayerUseEgg(event());
+        verify(scheduler).runTaskLater(eq(plugin), any(Runnable.class), eq(5L));
+        PlayerInteractEvent blocked = event();
+        listener.onPlayerUseEgg(blocked);
+        assertTrue(blocked.isCancelled());
+        verify(plugin, times(1)).effect(eq(player), eq("ground-failure"), anyMap());
+        nextTick();
+        listener.onPlayerUseEgg(event());
+        verify(plugin, times(2)).effect(eq(player), eq("ground-failure"), anyMap());
+    }
+
+    @Test
+    void zeroCooldownDoesNotBlockTheNextClick() {
+        config.set("settings.cooldown-ticks", 0);
+        applyConfig();
+        listener.onPlayerUseEgg(event());
+        PlayerInteractEvent second = event();
+        listener.onPlayerUseEgg(second);
+        assertTrue(second.isCancelled());
+        verify(scheduler, never()).runTaskLater(any(), any(Runnable.class), anyLong());
+        verify(plugin, times(2)).effect(eq(player), eq("ground-failure"), anyMap());
+    }
+
+    @Test
+    void statsCountProcessedEggsAndTheirOutcomes() {
+        listener.onPlayerUseEgg(event());
+        nextTick();
+        when(block.getType()).thenReturn(Material.SPAWNER);
+        config.set("settings.black-entities", List.of("ZOMBIE"));
+        applyConfig();
+        listener.onPlayerUseEgg(event());
+        assertEquals(2, stats.get("used"));
+        assertEquals(1, stats.get("failed"));
+        assertEquals(1, stats.get("denied"));
+        assertEquals(0, stats.get("broken"));
+    }
+
+    @Test
     void skipsCreativeByDefaultButCanOptIn() {
         when(player.getGameMode()).thenReturn(GameMode.CREATIVE);
         PlayerInteractEvent exempt = event();
@@ -243,6 +376,16 @@ class EggListenerTest {
         listener.onPlayerUseEgg(affected);
         assertTrue(affected.isCancelled());
         verify(inventory).setItem(eq(EquipmentSlot.HAND), any());
+    }
+
+    @Test
+    void creativeCanBeOptedInPerEntity() {
+        when(player.getGameMode()).thenReturn(GameMode.CREATIVE);
+        config.set("settings.entities.zombie.affect-creative", true);
+        applyConfig();
+        PlayerInteractEvent affected = event();
+        listener.onPlayerUseEgg(affected);
+        assertTrue(affected.isCancelled());
     }
 
     @Test
@@ -262,8 +405,9 @@ class EggListenerTest {
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         assertTrue(event.isCancelled());
-        verify(plugin).message(player, "no-permission");
+        verify(plugin).effect(eq(player), eq("no-permission"), anyMap());
         verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
+        assertEquals(0, stats.get("used"));
     }
 
     @Test
@@ -292,7 +436,7 @@ class EggListenerTest {
         listener.onPlayerUseEgg(blockDenied);
         verifyNoInteractions(roll);
         verify(inventory, never()).setItem(any(EquipmentSlot.class), any());
-        verify(plugin, never()).message(any(), any());
+        verify(plugin, never()).effect(any(), any(), any());
     }
 
     @Test
@@ -323,32 +467,34 @@ class EggListenerTest {
     }
 
     @Test
-    void successSoundWaitsForActualSpawnerChange() {
+    void successEffectWaitsForActualSpawnerChange() {
         CreatureSpawner spawner = prepareSpawner();
         listener.onPlayerUseEgg(event());
-        verify(plugin, never()).sound(player, "success");
+        verify(plugin, never()).effect(eq(player), eq("success"), anyMap());
         when(spawner.getSpawnedType()).thenReturn(EntityType.ZOMBIE);
         nextTick();
-        verify(plugin).sound(player, "success");
+        verify(plugin).effect(eq(player), eq("success"), anyMap());
+        assertEquals(1, stats.get("succeeded"));
     }
 
     @Test
-    void noSuccessSoundWhenVanillaDoesNotChangeSpawner() {
+    void noSuccessEffectWhenVanillaDoesNotChangeSpawner() {
         prepareSpawner();
         listener.onPlayerUseEgg(event());
         nextTick();
-        verify(plugin, never()).sound(player, "success");
+        verify(plugin, never()).effect(eq(player), eq("success"), anyMap());
+        assertEquals(0, stats.get("succeeded"));
     }
 
     @Test
-    void noSuccessSoundIfAnotherPluginCancelsLater() {
+    void noSuccessEffectIfAnotherPluginCancelsLater() {
         CreatureSpawner spawner = prepareSpawner();
         PlayerInteractEvent event = event();
         listener.onPlayerUseEgg(event);
         event.setCancelled(true);
         when(spawner.getSpawnedType()).thenReturn(EntityType.ZOMBIE);
         nextTick();
-        verify(plugin, never()).sound(player, "success");
+        verify(plugin, never()).effect(eq(player), eq("success"), anyMap());
     }
 
     @Test
@@ -356,11 +502,12 @@ class EggListenerTest {
         CreatureSpawner spawner = prepareSpawner();
         listener.onPlayerUseEgg(event());
         when(spawner.getSpawnedType()).thenReturn(EntityType.ZOMBIE);
-        when(block.getWorld().isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+        when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
         nextTick();
         verify(block, times(1)).getState();
-        verify(plugin, never()).sound(player, "success");
+        verify(plugin, never()).effect(eq(player), eq("success"), anyMap());
     }
+
     @Test
     void emptySpawnerCanBeConfirmedWithoutNullPointerException() {
         CreatureSpawner spawner = prepareSpawner();
@@ -368,16 +515,16 @@ class EggListenerTest {
         assertDoesNotThrow(() -> listener.onPlayerUseEgg(event()));
         when(spawner.getSpawnedType()).thenReturn(EntityType.ZOMBIE);
         nextTick();
-        verify(plugin).sound(player, "success");
+        verify(plugin).effect(eq(player), eq("success"), anyMap());
     }
 
     @Test
-    void sameSpawnerTypeDoesNotScheduleSuccessSound() {
+    void sameSpawnerTypeDoesNotScheduleSuccessEffect() {
         CreatureSpawner spawner = prepareSpawner();
         when(spawner.getSpawnedType()).thenReturn(EntityType.ZOMBIE);
         listener.onPlayerUseEgg(event());
         assertTrue(scheduled.isEmpty());
-        verify(plugin, never()).sound(player, "success");
+        verify(plugin, never()).effect(eq(player), eq("success"), anyMap());
     }
 
     @Test
@@ -406,5 +553,4 @@ class EggListenerTest {
         listener.onPlayerUseEgg(spawnerSuccess);
         assertFalse(spawnerSuccess.isCancelled());
     }
-
 }
