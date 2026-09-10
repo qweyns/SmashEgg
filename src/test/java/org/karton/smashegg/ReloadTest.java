@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.karton.smashegg.config.PluginSettings;
 
 class ReloadTest {
     @TempDir Path directory;
@@ -69,6 +70,20 @@ class ReloadTest {
         Files.writeString(directory.resolve("config.yml"), "settings:\n  language: xx_XX\n");
         assertTrue(plugin.reloadSettings());
         assertTrue(plugin.settings().messages().get("egg-break").enabled());
+    }
+
+    @Test
+    void customLangDirectoryIsReadFromTheDataFolder() throws Exception {
+        SmashEgg plugin = plugin();
+        Path langDirectory = directory.resolve("i18n");
+        Files.createDirectories(langDirectory);
+        Files.writeString(langDirectory.resolve("ru_RU.yml"),
+                "messages:\n  egg-break: \"<red>из i18n\"\n");
+        Files.writeString(directory.resolve("config.yml"),
+                "files:\n  lang-directory: i18n\nsettings:\n  language: ru_RU\n");
+        assertTrue(plugin.reloadSettings());
+        assertEquals("i18n", plugin.settings().langDirectory());
+        assertEquals("<red>из i18n", plugin.settings().messages().get("egg-break").text());
     }
 
     @Test

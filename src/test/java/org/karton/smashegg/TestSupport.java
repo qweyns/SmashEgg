@@ -4,23 +4,28 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.karton.smashegg.config.PluginSettings;
 
-final class TestSupport {
+public final class TestSupport {
     private TestSupport() {}
 
-    static YamlConfiguration config() {
+    public static YamlConfiguration config() {
         return load("/config.yml");
     }
 
-    static YamlConfiguration lang() {
+    public static YamlConfiguration lang() {
         return load("/lang/ru_RU.yml");
     }
 
-    static PluginSettings settings() {
+    public static YamlConfiguration langEn() {
+        return load("/lang/en_US.yml");
+    }
+
+    public static PluginSettings settings() {
         return PluginSettings.load(config(), lang(), ignored -> {});
     }
 
-    private static YamlConfiguration load(String resource) {
+    public static YamlConfiguration load(String resource) {
         try (InputStreamReader reader = new InputStreamReader(
                 Objects.requireNonNull(TestSupport.class.getResourceAsStream(resource), resource),
                 StandardCharsets.UTF_8)) {

@@ -24,6 +24,15 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.karton.smashegg.command.CommandHandler;
+import org.karton.smashegg.config.ConfigNodes;
+import org.karton.smashegg.config.PluginSettings;
+import org.karton.smashegg.effect.MessageSpec;
+import org.karton.smashegg.effect.ParticleSpec;
+import org.karton.smashegg.effect.Particles;
+import org.karton.smashegg.listener.EggListener;
+import org.karton.smashegg.stats.Stats;
+import org.karton.smashegg.text.ColorUtil;
 
 public class SmashEgg extends JavaPlugin {
     private final Stats stats = new Stats();
@@ -64,13 +73,13 @@ public class SmashEgg extends JavaPlugin {
      * still supplies every key. Without {@code copyDefaults} the section views returned by
      * {@code getValues} would only contain the keys the user actually wrote.
      */
-    static YamlConfiguration withDefaults(YamlConfiguration user, YamlConfiguration defaults) {
+    public static YamlConfiguration withDefaults(YamlConfiguration user, YamlConfiguration defaults) {
         user.setDefaults(defaults);
         user.options().copyDefaults(true);
         return user;
     }
 
-    boolean reloadSettings() {
+    public boolean reloadSettings() {
         try (InputStream resource = Objects.requireNonNull(getResource("config.yml"), "Missing default config.yml")) {
             YamlConfiguration defaults = new YamlConfiguration();
             defaults.load(new InputStreamReader(resource, StandardCharsets.UTF_8));
@@ -79,7 +88,9 @@ public class SmashEgg extends JavaPlugin {
             withDefaults(candidate, defaults);
             Consumer<String> warning = getLogger()::warning;
             YamlConfiguration lang = loadLanguage(candidate, warning);
-            settings = PluginSettings.load(candidate, lang, warning);
+            PluginSettings loaded = PluginSettings.load(candidate, lang, warning);
+            settings = loaded;
+            if (stats != null) stats.apply(loaded.stats());
             Particles.resetCache();
             warnedParticles.clear();
             return true;
@@ -90,9 +101,9 @@ public class SmashEgg extends JavaPlugin {
     }
 
     /**
-     * Language file lookup: {@code plugins/SmashEgg/lang/<language>.yml} wins over the bundled copy,
-     * so admins can translate without touching the jar. An unknown language falls back to the
-     * bundled default instead of disabling every message.
+     * Language file lookup: {@code plugins/SmashEgg/<lang-directory>/<language>.yml} wins over the
+     * bundled copy, so admins can translate without touching the jar. An unknown language falls
+     * back to the bundled default instead of disabling every message.
      */
     private YamlConfiguration loadLanguage(FileConfiguration config, Consumer<String> warning)
             throws IOException, InvalidConfigurationException {
@@ -100,26 +111,36 @@ public class SmashEgg extends JavaPlugin {
         if (!language.matches("[A-Za-z0-9_\\-]+")) {
             throw ConfigNodes.invalid("settings.language", "invalid language name: " + language);
         }
-        YamlConfiguration lang = readLanguage(language);
+        String langDirectory = langDirectory(config);
+        YamlConfiguration lang = readLanguage(langDirectory, language);
         if (lang != null) {
-            if (getResource("lang/" + language + ".yml") != null) saveResource("lang/" + language + ".yml", false);
+            if (getResource("lang/" + language + ".yml") != null) {
+                saveResource("lang/" + language + ".yml", false);
+            }
             return lang;
         }
-        warning.accept("settings.language: lang/" + language + ".yml not found; falling back to "
+        warning.accept("settings.language: " + langDirectory + "/" + language + ".yml not found; falling back to "
                 + PluginSettings.DEFAULT_LANGUAGE + ".");
-        YamlConfiguration fallback = readLanguage(PluginSettings.DEFAULT_LANGUAGE);
+        YamlConfiguration fallback = readLanguage(langDirectory, PluginSettings.DEFAULT_LANGUAGE);
         return fallback == null ? new YamlConfiguration() : fallback;
     }
 
-    private YamlConfiguration readLanguage(String language) throws IOException, InvalidConfigurationException {
-        String path = "lang/" + language + ".yml";
-        File userFile = new File(getDataFolder(), path);
+    private String langDirectory(FileConfiguration config) {
+        Object value = config.get("files.lang-directory");
+        if (value == null) return PluginSettings.DEFAULT_LANG_DIRECTORY;
+        return ConfigNodes.relativePath(value, "files.lang-directory");
+    }
+
+    private YamlConfiguration readLanguage(String langDirectory, String language)
+            throws IOException, InvalidConfigurationException {
+        String bundled = "lang/" + language + ".yml";
+        File userFile = new File(getDataFolder(), langDirectory + "/" + language + ".yml");
         YamlConfiguration lang = new YamlConfiguration();
         if (userFile.isFile()) {
             lang.load(userFile);
             return lang;
         }
-        try (InputStream in = getResource(path)) {
+        try (InputStream in = getResource(bundled)) {
             if (in == null) return null;
             lang.load(new InputStreamReader(in, StandardCharsets.UTF_8));
             return lang;
@@ -139,23 +160,24 @@ public class SmashEgg extends JavaPlugin {
     }
 
     private File statsFile() {
-        return new File(getDataFolder(), "stats.yml");
+        String name = settings == null ? PluginSettings.DEFAULT_STATS_FILE : settings.statsFile();
+        return new File(getDataFolder(), name);
     }
 
-    PluginSettings settings() {
+    public PluginSettings settings() {
         return settings;
     }
 
-    Stats stats() {
+    public Stats stats() {
         return stats;
     }
 
     /** Writes stats.yml right away; a manual reset must survive a crash. */
-    void saveStats() {
+    public void saveStats() {
         stats.save(statsFile(), getLogger());
     }
 
-    String version() {
+    public String version() {
         return version;
     }
 
@@ -163,12 +185,12 @@ public class SmashEgg extends JavaPlugin {
      * Names of the loaded worlds, for tab completion. A seam of its own because
      * {@code JavaPlugin#getServer()} is final and cannot be stubbed without the inline mock maker.
      */
-    List<String> worldNames() {
+    public List<String> worldNames() {
         return getServer().getWorlds().stream().map(World::getName).toList();
     }
 
     /** Message, sound and particles belonging to one effect key. */
-    void effect(Player player, String key, Map<String, String> context) {
+    public void effect(Player player, String key, Map<String, String> context) {
         PluginSettings current = settings;
         send(player, current.messages().get(key), context);
         Sound sound = current.sounds().get(key);
@@ -177,15 +199,15 @@ public class SmashEgg extends JavaPlugin {
         if (particle != null) spawnParticles(player, particle);
     }
 
-    void message(CommandSender sender, String key) {
+    public void message(CommandSender sender, String key) {
         message(sender, key, Map.of());
     }
 
-    void message(CommandSender sender, String key, Map<String, String> context) {
+    public void message(CommandSender sender, String key, Map<String, String> context) {
         send(sender, settings.messages().get(key), context);
     }
 
-    void logEvent(String effect, Map<String, String> context) {
+    public void logEvent(String effect, Map<String, String> context) {
         if (!settings.logEvents()) return;
         getLogger().info(() -> "SmashEgg " + effect
                 + " player=" + context.get("player")
@@ -220,7 +242,8 @@ public class SmashEgg extends JavaPlugin {
             }
             return;
         }
-        player.getWorld().spawnParticle(particle, player.getLocation().add(0.0, 1.0, 0.0),
+        player.getWorld().spawnParticle(particle,
+                player.getLocation().add(spec.offsetX(), spec.offsetY(), spec.offsetZ()),
                 spec.count(), spec.spread(), spec.spread(), spec.spread(), spec.speed());
     }
 }
