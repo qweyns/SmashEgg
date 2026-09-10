@@ -8,6 +8,22 @@
     <artifactId>SmashEgg</artifactId>
     <version>4.0.0</version>
 
+    <name>SmashEgg</name>
+    <description>Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.</description>
+    <url>https://github.com/qweyns/SmashEgg</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/qweyns/SmashEgg</url>
+        <connection>scm:git:https://github.com/qweyns/SmashEgg.git</connection>
+    </scm>
+
     <properties>
         <!-- Paper 1.21.x requires Java 21 or newer. -->
         <maven.compiler.release>21</maven.compiler.release>

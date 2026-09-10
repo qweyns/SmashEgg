@@ -234,4 +234,8 @@ Unit-тесты не заменяют запуск Minecraft. Перед уст�
 
 Автор: **qweyns**. Java-пакет `org.karton.smashegg` сохранён для совместимости структуры проекта.
 
-Скрипты Maven Wrapper взяты из Apache Maven Wrapper 3.3.2 и распространяются по Apache License 2.0; текст лицензии находится в заголовках `mvnw` и `mvnw.cmd`, настройки — в `.mvn/wrapper/maven-wrapper.properties`. Это уведомление относится к Wrapper, а не задаёт новую лицензию всему проекту.
+## Лицензия
+
+**MIT** — полный текст в [LICENSE](LICENSE). Авторское право: qweyns.
+
+Скрипты Maven Wrapper взяты из Apache Maven Wrapper 3.3.2 и распространяются по Apache License 2.0; текст лицензии находится в заголовках `mvnw` и `mvnw.cmd`, настройки — в `.mvn/wrapper/maven-wrapper.properties`. Это уведомление относится только к Wrapper: сам проект распространяется по MIT.

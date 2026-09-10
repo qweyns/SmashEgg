@@ -20,6 +20,7 @@
 - **Настраиваемый кулдаун** между обработками яиц игрока: `settings.cooldown-ticks` (0 отключает блокировку).
 - **Журнал событий** в консоль: `settings.log-events`.
 - **Предупреждения о неизвестных полях конфига** (`SectionFields`, `ConfigNodes`) — опечатка в `settings`, `settings.worlds`, `settings.entities`, `sounds`, `particles`, `messages` больше не проходит молча.
+- **`LICENSE` (MIT)** и блоки `licenses`, `scm`, `name`, `url`, `description` в `pom.xml`.
 - `CHANGELOG.md` и обновление `README.md`, `docs/ROADMAP.md`, `docs/TESTING.md` под новую функциональность.
 - Новые тесты: `PlaceholdersTest`, расширены `PluginSettingsTest`, `SoundsTest`, `EggListenerTest`, `CommandHandlerTest`, `StatsTest`, `ColorUtilTest`, `ReloadTest`.
 
