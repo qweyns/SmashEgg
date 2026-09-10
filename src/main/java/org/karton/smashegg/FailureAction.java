@@ -11,11 +11,11 @@ enum FailureAction {
     /** Remove one egg and drop it as an item at the player. */
     DROP;
 
-    static FailureAction parse(String value) {
+    static FailureAction parse(String value, String path) {
         String normalized = value.trim().toUpperCase(Locale.ROOT);
         for (FailureAction action : values()) {
             if (action.name().equals(normalized)) return action;
         }
-        throw new IllegalArgumentException("must be one of consume, keep, drop (found: " + value + ")");
+        throw ConfigNodes.invalid(path, "must be one of consume, keep, drop (found: " + value + ")");
     }
 }

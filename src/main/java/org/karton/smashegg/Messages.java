@@ -17,11 +17,8 @@ final class Messages {
         String text = ConfigNodes.string(section.get("text"), path + ".text");
         MessageOutput output = MessageOutput.CHAT;
         if (section.containsKey("output")) {
-            try {
-                output = MessageOutput.parse(ConfigNodes.string(section.get("output"), path + ".output"));
-            } catch (IllegalArgumentException e) {
-                throw ConfigNodes.invalid(path + ".output", e.getMessage());
-            }
+            output = MessageOutput.parse(ConfigNodes.string(section.get("output"), path + ".output"),
+                    path + ".output");
         }
         return spec(text, output, path);
     }

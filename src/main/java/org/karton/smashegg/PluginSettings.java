@@ -75,14 +75,16 @@ record PluginSettings(int configVersion, String language, Rules rules,
                 true, warning);
 
         FilterMode filterMode = FilterMode.parse(
-                ConfigNodes.string(settings.get("entity-filter"), "settings.entity-filter"));
+                ConfigNodes.string(settings.get("entity-filter"), "settings.entity-filter"),
+                "settings.entity-filter");
         Set<String> filteredEntities = entityList(settings.get("black-entities"), "settings.black-entities",
                 warning);
         Set<String> disabledWorlds = worldList(settings.get("disabled-worlds"), "settings.disabled-worlds");
 
         int cooldownTicks = ConfigNodes.integer(settings.get("cooldown-ticks"), "settings.cooldown-ticks", 0, 72000);
         FailureAction failureAction = FailureAction.parse(
-                ConfigNodes.string(settings.get("failure-action"), "settings.failure-action"));
+                ConfigNodes.string(settings.get("failure-action"), "settings.failure-action"),
+                "settings.failure-action");
         boolean logEvents = ConfigNodes.bool(settings.get("log-events"), "settings.log-events");
 
         return new PluginSettings(configVersion,

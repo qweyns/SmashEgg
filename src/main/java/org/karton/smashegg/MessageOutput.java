@@ -6,11 +6,11 @@ import java.util.Locale;
 enum MessageOutput {
     CHAT, ACTIONBAR, TITLE, NONE;
 
-    static MessageOutput parse(String value) {
+    static MessageOutput parse(String value, String path) {
         String normalized = value.trim().toUpperCase(Locale.ROOT);
         for (MessageOutput output : values()) {
             if (output.name().equals(normalized)) return output;
         }
-        throw new IllegalArgumentException("must be one of chat, actionbar, title, none (found: " + value + ")");
+        throw ConfigNodes.invalid(path, "must be one of chat, actionbar, title, none (found: " + value + ")");
     }
 }

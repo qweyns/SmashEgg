@@ -89,13 +89,28 @@ class EggListenerTest {
         when(plugin.settings()).thenReturn(PluginSettings.load(config, TestSupport.lang(), ignored -> {}));
     }
 
+    /**
+     * Stand-in for a real {@link ItemStack}: constructing one initialises {@code org.bukkit.Registry},
+     * which needs a running server. Only the amount behaviour the listener relies on is reproduced.
+     */
+    private static ItemStack fakeStack(Material material, int amount) {
+        ItemStack stack = mock(ItemStack.class);
+        int[] current = {amount};
+        when(stack.getType()).thenReturn(material);
+        when(stack.getAmount()).thenAnswer(call -> current[0]);
+        doAnswer(call -> {
+            current[0] = call.getArgument(0);
+            return null;
+        }).when(stack).setAmount(anyInt());
+        when(stack.clone()).thenAnswer(call -> fakeStack(material, current[0]));
+        return stack;
+    }
+
     private PlayerInteractEvent event(EquipmentSlot hand, int amount) {
         // The event stack deliberately differs from the inventory stack, as it can on a server.
-        ItemStack eventItem = new ItemStack(Material.ZOMBIE_SPAWN_EGG, amount);
-        ItemStack held = mock(ItemStack.class);
-        when(held.getAmount()).thenReturn(amount);
+        ItemStack eventItem = fakeStack(Material.ZOMBIE_SPAWN_EGG, amount);
+        ItemStack held = fakeStack(Material.ZOMBIE_SPAWN_EGG, amount);
         when(held.isSimilar(eventItem)).thenReturn(true);
-        when(held.clone()).thenReturn(new ItemStack(Material.ZOMBIE_SPAWN_EGG, amount));
         when(inventory.getItem(hand)).thenReturn(held);
         return new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, eventItem, block, BlockFace.UP, hand);
     }
@@ -445,11 +460,11 @@ class EggListenerTest {
         listener.onPlayerUseEgg(event());
         when(player.getGameMode()).thenReturn(GameMode.SURVIVAL);
         listener.onPlayerUseEgg(new PlayerInteractEvent(player, Action.RIGHT_CLICK_AIR,
-                new ItemStack(Material.ZOMBIE_SPAWN_EGG), null, BlockFace.SELF, EquipmentSlot.HAND));
+                fakeStack(Material.ZOMBIE_SPAWN_EGG, 1), null, BlockFace.SELF, EquipmentSlot.HAND));
         listener.onPlayerUseEgg(new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK,
-                new ItemStack(Material.ZOMBIE_SPAWN_EGG), block, BlockFace.UP, EquipmentSlot.HAND));
+                fakeStack(Material.ZOMBIE_SPAWN_EGG, 1), block, BlockFace.UP, EquipmentSlot.HAND));
         listener.onPlayerUseEgg(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK,
-                new ItemStack(Material.EGG), block, BlockFace.UP, EquipmentSlot.HAND));
+                fakeStack(Material.EGG, 1), block, BlockFace.UP, EquipmentSlot.HAND));
         listener.onPlayerUseEgg(new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK,
                 null, block, BlockFace.UP, EquipmentSlot.HAND));
         verifyNoInteractions(roll);
