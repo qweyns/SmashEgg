@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.util;
 
 import java.util.Locale;
 import org.bukkit.Material;

@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.listener;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -25,6 +25,9 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.karton.smashegg.SmashEgg;
+import org.karton.smashegg.config.PluginSettings;
+import org.karton.smashegg.util.EggTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

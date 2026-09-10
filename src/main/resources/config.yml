@@ -1,34 +1,67 @@
-# SmashEgg 2.1 — сообщения используют MiniMessage, а не &-коды.
-# /smashegg reload применяет конфиг только после полной проверки.
-# При ошибке сохраняются предыдущие рабочие настройки; причина выводится в консоль.
-# Отсутствующие ключи берутся из встроенных значений, старый файл не перезаписывается.
+# SmashEgg 4.0 — configurable via config.yml and lang/*.yml
+# /smashegg reload applies config after full validation.
+# Missing keys fall back to built-in defaults; old file is not overwritten.
+# Empty sounds.messages."": disables the effect. Empty strings in config are valid.
+
 settings:
   egg-break-on-spawner: true
-  egg-break-chance: 30       # Целое число 0..100: вероятность поломки на спавнере.
-  ground-spawn-chance: 70    # Целое число 0..100: шанс пройти проверку на других блоках.
-  affect-creative: false    # true: Creative тоже теряет яйцо при неудаче.
+  egg-break-chance: 30       # Integer 0..100: probability of break on spawner.
+  ground-spawn-chance: 70    # Integer 0..100: chance to pass the check on other blocks.
+  affect-creative: false    # true: Creative also loses egg on failure.
 
-  # Только для спавнеров. Запрет не расходует яйцо и действует даже в Creative/bypass.
-  # Регистр не важен. Названия новых мобов сохраняются даже на старом сервере.
-  black-entities:
-    - ENDER_DRAGON
-    - WITHER
-    - WARDEN
+  # Blacklist: entity names (case-insensitive, normalized). Empty list = none.
+  black-entities: []
 
-# Пустая строка "" отключает звук. Неверное имя отклоняет загрузку конфига.
-# Звуки слышит только игрок, использовавший яйцо.
+# Sound defaults: volume, pitch, source (MASTER/MASTER/BLOCK/ENTITY) per sound key.
+# These values are used if the key is present in sounds section but a sub-key is omitted.
+defaults:
+  sounds:
+    volume: 1.0
+    pitch: 1.0
+    source: MASTER
+
+# Particle defaults: count, spread, speed, offset-y.
+# Override globally for all particle keys, or set per-key in particles section.
+  particles:
+    count: 10
+    spread: 0.3
+    speed: 0.0
+    offset-y: 1.0
+
+# Only for spawners. Ban does not consume egg and works even in Creative/bypass.
+# Entity names are saved even on old servers; register new mobs even on old server.
+black-entities:
+  - ENDER_DRAGON
+  - WITHER
+  - WARDEN
+
+# Sounds played. Empty string "" disables. Player only hears if they used the egg.
 sounds:
-  success: ENTITY_PLAYER_LEVELUP  # После подтверждённой смены типа моба в спавнере.
+  success: ENTITY_PLAYER_LEVELUP    # After confirmed type change in spawner.
   failure: ENTITY_VILLAGER_NO
   denied: BLOCK_ANVIL_LAND
   egg-break: BLOCK_GLASS_BREAK
 
-# Пустая строка "" отключает сообщение.
+# Messages use MiniMessage (HEX, gradients). Empty string "" disables message.
 messages:
-  usage: "<#E43A96>▶ <white>Использование: <#E43A96>/smashegg reload"
-  reload-success: "<#E43A96>▶ <white>Конфигурация <#E43A96>успешно <white>перезагружена!"
-  reload-failure: "<#E43A96>▶ <red>Ошибка конфигурации. <white>Прежние настройки сохранены; подробности в консоли."
-  no-permission: "<#E43A96>▶ <white>У вас <#E43A96>нет прав <white>для этого."
-  egg-break: "<#E43A96>▶ <white>Яйцо <#E43A96>разбилось <white>при установке в спавнер!"
-  ground-failure: "<#E43A96>▶ <white>Яйцо <#E43A96>разбилось в руках<white>, моб не появился!"
-  denied: "<#E43A96>▶ <white>Этот тип моба <#E43A96>запрещён <white>в спавнерах!"
+  usage: "<#E43A96>▶ <white>Usage: <#E43A96>/smashegg reload"
+  reload-success: "<#E43A96>▶ <white>Configuration <#E43A96>successfully <white>reloaded!"
+  reload-failure: "<#E43A96>▶ <red>Configuration error. <white>Previous settings preserved; details in console."
+  no-permission: "<#E43A96>▶ <white>You <#E43A96>don't have permission <white>for this."
+  egg-break: "<#E43A96>▶ <white>Your egg <#E43A96>broken <white>when placing in spawner!"
+  ground-failure: "<#E43A96>▶ <white>Your egg <#E43A96>broken <white>in hand, mob didn't spawn!"
+  denied: "<#E43A96>▶ <white>This mob type <#E43A96>is <white><blacklist> <white>in spawners!"
+
+# Particles configuration per effect.
+# offset-y is the vertical offset (height); offset-x and offset-z are optional.
+particles:
+  success:
+    count: 10
+    spread: 0.3
+    speed: 0.0
+    offset-y: 1.0
+  failure:
+    count: 10
+    spread: 0.3
+    speed: 0.0
+    offset-y: 1.0

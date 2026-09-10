@@ -5,7 +5,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-final class TestSupport {
+/** Support class for tests – made public so other packages can use it. */
+public class TestSupport {
     private TestSupport() {}
 
     static YamlConfiguration config() {

@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -8,6 +8,7 @@ import java.util.Locale;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.karton.smashegg.SmashEgg;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

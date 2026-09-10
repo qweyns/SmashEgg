@@ -11,8 +11,6 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.PluginCommand;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,6 +18,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SmashEgg extends JavaPlugin {
     private BukkitAudiences adventure;
     private PluginSettings settings;
+    private Sounds sounds;
+    private Particles particles;
 
     @Override
     public void onEnable() {
@@ -30,6 +30,8 @@ public class SmashEgg extends JavaPlugin {
             return;
         }
         adventure = BukkitAudiences.create(this);
+        this.sounds = Sounds.fromConfig(getConfig());
+        this.particles = Particles.fromConfig(getConfig());
         CommandHandler handler = new CommandHandler(this);
         PluginCommand command = Objects.requireNonNull(getCommand("smashegg"), "Missing smashegg command in plugin.yml");
         command.setExecutor(handler);
@@ -55,8 +57,11 @@ public class SmashEgg extends JavaPlugin {
             candidate.setDefaults(defaults);
             PluginSettings next = PluginSettings.load(candidate, getLogger()::warning);
             settings = next;
+            // Re-initialize sounds and particles after reload
+            sounds = Sounds.fromConfig(candidate);
+            particles = Particles.fromConfig(candidate);
             return true;
-        } catch (IOException | InvalidConfigurationException | IllegalArgumentException e) {
+        } catch (IOException | org.bukkit.configuration.InvalidConfigurationException | IllegalArgumentException e) {
             getLogger().severe("Cannot load config.yml; active settings unchanged: " + e.getMessage());
             return false;
         }
@@ -75,6 +80,13 @@ public class SmashEgg extends JavaPlugin {
 
     void sound(Player player, String key) {
         Sound sound = settings.sounds().get(key);
-        if (sound != null) player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
+        if (sound != null) {
+            float volume = settings.sounds().getVolume(key);
+            float pitch = settings.sounds().getPitch(key);
+            player.playSound(player.getLocation(), sound, volume, pitch);
+        }
     }
+
+    // Particle effects now read from config via Particles class
+    // Particles are played via the Particles utility, not directly here
 }

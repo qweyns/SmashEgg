@@ -1,7 +1,7 @@
 name: SmashEgg
 version: '${project.version}'
 main: org.karton.smashegg.SmashEgg
-api-version: '1.16'
+api-version: '1.21'
 author: qweyns
 description: Настраиваемая поломка яиц призыва на блоках и запрет мобов в спавнерах.
 

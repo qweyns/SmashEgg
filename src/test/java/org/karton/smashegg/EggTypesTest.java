@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 

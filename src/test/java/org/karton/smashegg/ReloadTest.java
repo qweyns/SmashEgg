@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
+import org.karton.smashegg.SmashEgg;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

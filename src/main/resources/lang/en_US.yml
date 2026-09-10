@@ -1,0 +1,38 @@
+# SmashEgg Language - English
+# Placeholders are defined in the 'placeholders' section and used in messages via {placeholder}
+# To add new keys, simply add them here — no code changes needed (as long as the key is used in config contexts that allow extensibility).
+
+placeholders:
+  main: main
+  off: off
+  spawner: spawner
+  ground: ground
+  on: yes
+  yes: yes
+  no: no
+  blacklist: blacklist
+  whitelist: whitelist
+  negation: &c-&r
+
+messages:
+  # Technical/control messages (these keys must exist in code, but their text is configurable)
+  no-permission: "<red>You don't have permission to use this command."
+  usage: "<red>Usage: /smashegg <white><main>"
+  info: "<white>SmashEgg <main><white> v<main>"
+  stats: "<white>Statistics: <main><white> used=<main><main>/<white>broken=<main><main>/<white>failed=<main><main>/<white>denied=<main><main>/<white>succeeded=<main><main>"
+  stats-reset: "<white>Statistics reset."
+  reload-success: "<green>Configuration successfully reloaded!"
+  reload-failure: "<red>Configuration error. Previous settings preserved. Check console for details."
+  denied: "<red>This mob type is <white><blacklist> <red>in spawners!"
+  egg-break: "<red>Your egg <white><broken> <red>when placing in spawner!"
+  ground-failure: "<red>Your egg <white><broken> <red>, mob didn't spawn!"
+  success: "<green>Mob type set to <white><main> <green>in spawner."
+  unknown: "<red>Unknown error occurred."
+  
+  # Custom keys that users can add without code changes
+  
+  # Custom keys that users can add without code changes
+  # (These are optional - the plugin won't crash if they're missing, thanks to the new config parsing)
+  
+  # Example custom key:
+  # mycustomkey: "This is a custom message"

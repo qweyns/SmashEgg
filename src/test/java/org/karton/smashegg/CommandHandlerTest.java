@@ -1,10 +1,11 @@
-package org.karton.smashegg;
+package org.karton.smashegg.command;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
 import org.bukkit.command.CommandSender;
+import org.karton.smashegg.SmashEgg;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

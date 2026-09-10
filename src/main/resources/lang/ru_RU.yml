@@ -1,0 +1,35 @@
+# SmashEgg Language - Russian
+# Placeholders are defined in the 'placeholders' section and used in messages via {placeholder}
+# To add new keys, simply add them here — no code changes needed (as long as the key is used in config contexts that allow extensibility).
+
+placeholders:
+  main: основной
+  off: отключено
+  spawner: спавнер
+  ground: земля
+  on: да
+  yes: да
+  no: нет
+  blacklist: черный список
+  whitelist: белый список
+  negation: &c-&r
+
+messages:
+  # Technical/control messages (these keys must exist in code, but their text is configurable)
+  no-permission: "<red>У вас нет прав на использование этой команды."
+  usage: "<red>Использование: /smashegg <white><main>"
+  info: "<white>SmashEgg <main><white> v<main>"
+  stats: "<white>Статистика: <main><white> использовано=<main><main>/<white>сломано=<main><main>/<white>ошибки=<main><main>/<white>запрещено=<main><main>/<white>успех=<main><main>"
+  stats-reset: "<white>Статистика сброшена."
+  reload-success: "<зеленый>Конфигурация успешно перезагружена!"
+  reload-failure: "<red>Ошибка конфигурации. Предыдущие настройки сохранены. Смотрите консоль для подробностей."
+  denied: "<red>Этот тип моба <white><blacklist> <red>запрещен в спавнерах!"
+  egg-break: "<red>Ваше яйцо <white><broken> <red>при установке в спавнер!"
+  ground-failure: "<red>Ваше яйцо <white><broken> <red>, моб не появился!"
+  success: "<green>Тип моба установлен на <white><main> <green>в спавнере."
+  unknown: "<red>Неизвестная ошибка occured."
+  
+  # Custom keys that users can add without code changes
+  
+  # Custom keys that users can add without code changes
+  # (These are optional - the plugin won't crash if they're missing)

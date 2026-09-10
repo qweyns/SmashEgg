@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.command;
 
 import java.util.List;
 import java.util.Locale;
@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.karton.smashegg.SmashEgg;
 
 public final class CommandHandler implements CommandExecutor, TabCompleter {
     private final SmashEgg plugin;

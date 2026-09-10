@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.listener;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,10 +14,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.karton.smashegg.config.PluginSettings;
+import org.karton.smashegg.effect.Particles;
+import org.karton.smashegg.effect.Sounds;
+import org.karton.smashegg.util.EggTypes;
 
 final class EggListener implements Listener {
     private final SmashEgg plugin;
@@ -104,14 +107,14 @@ final class EggListener implements Listener {
     }
 
     private void confirmSpawnerChange(PlayerInteractEvent event, Block block, String expectedEntity) {
-        if (!(block.getState() instanceof CreatureSpawner before)
+        if (!(block.getState() instanceof CreatureSpawner before))
                 || matchesEntity(before, expectedEntity)) return;
         // Vanilla changes the spawner after the event. Do not claim success before that happens.
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             if (event.isCancelled() || event.useItemInHand() == Event.Result.DENY
                     || event.useInteractedBlock() == Event.Result.DENY || !event.getPlayer().isOnline()
                     || !block.getWorld().isChunkLoaded(block.getX() >> 4, block.getZ() >> 4)) return;
-            if (block.getState() instanceof CreatureSpawner after
+            if (block.getState() instanceof CreatureSpawner after)
                     && matchesEntity(after, expectedEntity)) {
                 plugin.sound(event.getPlayer(), "success");
             }

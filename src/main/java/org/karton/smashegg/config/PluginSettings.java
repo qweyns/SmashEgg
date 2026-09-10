@@ -1,4 +1,4 @@
-package org.karton.smashegg;
+package org.karton.smashegg.config;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,17 +10,20 @@ import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.FileConfiguration;
 
 /** Validated, immutable snapshot. Reload replaces it only after every setting is valid. */
-record PluginSettings(boolean breakOnSpawner, int breakChance, int groundChance,
+public record PluginSettings(boolean breakOnSpawner, int breakChance, int groundChance,
                       boolean affectCreative, Set<String> blacklist,
                       Map<String, Sound> sounds, Map<String, Component> messages) {
-    private static final List<String> SOUND_KEYS = List.of("success", "failure", "denied", "egg-break");
-    private static final List<String> MESSAGE_KEYS = List.of("usage", "reload-success", "reload-failure",
-            "no-permission", "egg-break", "ground-failure", "denied");
 
-    PluginSettings {
+    private static final Set<String> DEFAULT_SOUND_KEYS = Set.of("success", "failure", "denied", "egg-break");
+    private static final Set<String> DEFAULT_MESSAGE_KEYS = Set.of("usage", "reload-success", "reload-failure",
+            "no-permission", "denied", "egg-break", "ground-failure",
+            "info", "stats", "stats-reset", "unknown");
+
+    public PluginSettings {
         blacklist = Set.copyOf(blacklist);
         sounds = Map.copyOf(sounds);
         messages = Map.copyOf(messages);
@@ -32,6 +35,7 @@ record PluginSettings(boolean breakOnSpawner, int breakChance, int groundChance,
                 throw invalid(section, "must be a YAML section");
             }
         }
+
         Set<String> blacklist = new HashSet<>();
         Object entries = config.get("settings.black-entities");
         if (!(entries instanceof List<?> list)) {
@@ -53,27 +57,46 @@ record PluginSettings(boolean breakOnSpawner, int breakChance, int groundChance,
             }
         }
 
+        // Load sounds - now extensible: all keys under "sounds." are allowed,
+        // not just a fixed set. Unknown keys won't trigger "unknown config key" warning.
         Map<String, Sound> sounds = new HashMap<>();
-        for (String key : SOUND_KEYS) {
-            String path = "sounds." + key;
-            String value = string(config, path).trim();
-            if (value.isEmpty()) continue; // An empty sound explicitly disables it.
-            try {
-                sounds.put(key, Sound.valueOf(value.toUpperCase(Locale.ROOT)));
-            } catch (IllegalArgumentException e) {
-                throw invalid(path, "unknown sound: " + value + " (use an empty string to disable)");
+        ConfigurationSection soundsSection = config.getConfigurationSection("sounds");
+        if (soundsSection != null) {
+            for (String key : soundsSection.getKeys(false)) {
+                Object value = soundsSection.get(key);
+                if (value instanceof String soundName) {
+                    String trimmed = soundName.trim();
+                    if (trimmed.isEmpty()) {
+                        // Empty string explicitly disables the sound
+                        sounds.put(key, null);
+                    } else {
+                        try {
+                            sounds.put(key, Sound.valueOf(trimmed.toUpperCase(Locale.ROOT)));
+                        } catch (IllegalArgumentException e) {
+                            throw invalid("sounds." + key, "unknown sound: " + value);
+                        }
+                    }
+                }
             }
         }
 
+        // Load messages - now extensible: all keys under "messages." are allowed,
+        // not just a fixed set. Unknown keys won't trigger "unknown config key" warning.
         Map<String, Component> messages = new HashMap<>();
-        for (String key : MESSAGE_KEYS) {
-            String path = "messages." + key;
-            try {
-                messages.put(key, ColorUtil.parse(string(config, path)));
-            } catch (IllegalArgumentException e) {
-                throw invalid(path, e.getMessage());
+        ConfigurationSection messagesSection = config.getConfigurationSection("messages");
+        if (messagesSection != null) {
+            for (String key : messagesSection.getKeys(false)) {
+                Object value = messagesSection.get(key);
+                if (value instanceof String messageText) {
+                    try {
+                        messages.put(key, ColorUtil.parse(messageText));
+                    } catch (IllegalArgumentException e) {
+                        throw invalid("messages." + key, e.getMessage());
+                    }
+                }
             }
         }
+
         return new PluginSettings(bool(config, "settings.egg-break-on-spawner"),
                 percent(config, "settings.egg-break-chance"),
                 percent(config, "settings.ground-spawn-chance"),
